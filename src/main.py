@@ -14,17 +14,18 @@ Basic Echobot example, repeats messages.
 Press Ctrl-C on the command line or send a signal to the process to stop the
 bot.
 """
-
-import logging
+from pathlib import Path
 
 from telegram import ForceReply, Update
 from telegram.ext import Application, CommandHandler, ContextTypes, \
     MessageHandler, filters
 
 from gpt_utils import get_answer
+from scrip_utils import get_logger
 from settings import TELEGRAM_TOKEN
 
-LOGGER = logging.getLogger(__name__)
+file_name = Path(__file__)
+LOGGER = get_logger(logger_name=file_name.stem)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -43,6 +44,8 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 async def gpt_answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Echo the user message."""
+    user = update.effective_user
+    LOGGER.info(f"{user.id}; {user.mention_html()}; {update.message.text}")
     await update.message.reply_text(get_answer(update.message.text))
 
 
