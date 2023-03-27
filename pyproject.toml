@@ -11,6 +11,7 @@ packages = [{include = "gpt_wrap"}]
 python = "^3.11"
 openai = "^0.27.2"
 pyyaml = "^6.0"
+python-telegram-bot = "^20.2"
 
 
 [build-system]
