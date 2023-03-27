@@ -25,7 +25,7 @@ from scrip_utils import get_logger
 from settings import TELEGRAM_TOKEN
 
 file_name = Path(__file__)
-LOGGER = get_logger(logger_name=file_name.stem)
+LOGGER = get_logger(logger_name=file_name.stem, path=file_name.parent)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -45,7 +45,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 async def gpt_answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Echo the user message."""
     user = update.effective_user
-    LOGGER.info(f"{user.id}; {user.mention_html()}; {update.message.text}")
+    LOGGER.info(f"new_request: {user.id}; {user.mention_html()}; {update.message.text}")
     await update.message.reply_text(get_answer(update.message.text))
 
 
