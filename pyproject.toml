@@ -5,7 +5,7 @@ description = "Teregram bot wrapped around GPT API"
 authors = ["mrYush"]
 license = "MIT License"
 readme = "README.md"
-packages = [{include = "gpt_wrap"}]
+packages = [{include = "src"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"

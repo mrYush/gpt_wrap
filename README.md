@@ -8,20 +8,15 @@ To launch code you need telegram token and openai token
 
 ## set enviroment
 ```
-pipenv shell
-pipenv install
-```
-
-add src subfolder in PYTHONPATH
-```
-export PYTHONPATH="${PYTHONPATH}:$(pwd)/src"
+poetry shell
+poetry install
 ```
 
 ## configurate
 Fill config file
 ```
-cp gpt_wrap/ai_config.yaml.example gpt_wrap/ai_config.yaml
-vim gpt_wrap/ai_config.yaml
+cp config.yaml.example config.yaml
+vim config.yaml
 ```
 be sure that you fill all parameters in config correctly
 
