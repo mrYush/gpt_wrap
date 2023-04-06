@@ -14,19 +14,20 @@ Basic Echobot example, repeats messages.
 Press Ctrl-C on the command line or send a signal to the process to stop the
 bot.
 """
+import re
 from pathlib import Path
 
 from telegram import ForceReply, Update
 from telegram.ext import Application, CommandHandler, ContextTypes, \
     MessageHandler, filters
 
-from gpt_utils import get_answer
+from gpt_utils import get_answer, get_gen_pic_url
 from scrip_utils import get_logger
 from settings import TELEGRAM_TOKEN
 
 file_name = Path(__file__)
 LOGGER = get_logger(logger_name=file_name.stem, path=file_name.parent)
-
+PIC_COMMAND = "pic"
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /start is issued."""
@@ -49,6 +50,16 @@ async def gpt_answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     await update.message.reply_text(get_answer(update.message.text))
 
 
+async def make_picture(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Sends the image generated on request"""
+    user = update.effective_user
+    LOGGER.info(f"new_request: {user.id}; {user.mention_html()}; {update.message.text}")
+    pic_url = get_gen_pic_url(text_description=re.sub(f"/{PIC_COMMAND}", "", update.message.text))
+    print(pic_url)
+    chat_id = update.effective_chat.id
+    await context.bot.send_photo(chat_id=chat_id, photo=pic_url)
+
+
 def main() -> None:
     """Start the bot."""
     # Create the Application and pass it your bot's token.
@@ -61,6 +72,9 @@ def main() -> None:
     # on non command i.e message - echo the message on Telegram
     application.add_handler(
         MessageHandler(filters.TEXT & ~filters.COMMAND, gpt_answer)
+    )
+    application.add_handler(
+        CommandHandler("pic", make_picture)
     )
 
     # Run the bot until the user presses Ctrl-C
