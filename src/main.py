@@ -16,15 +16,14 @@ bot.
 """
 from pathlib import Path
 
-from telegram.ext import Application, CommandHandler, MessageHandler, filters
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler
 
 from scrip_utils import get_logger
 from settings import TELEGRAM_TOKEN
-from src.telegram_utils import start, help_command, gpt_answer, make_picture
+from src.telegram_utils import start, help_command, gpt_answer, make_picture, choose_context, button
 
 file_name = Path(__file__)
 LOGGER = get_logger(logger_name=file_name.stem, path=file_name.parent)
-PIC_COMMAND = "pic"
 
 
 def main() -> None:
@@ -43,7 +42,10 @@ def main() -> None:
     application.add_handler(
         CommandHandler("pic", make_picture)
     )
-
+    application.add_handler(
+        CommandHandler('context', choose_context)
+    )
+    application.add_handler(CallbackQueryHandler(button))
     # Run the bot until the user presses Ctrl-C
     application.run_polling()
 
