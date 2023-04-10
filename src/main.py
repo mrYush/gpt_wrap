@@ -29,6 +29,7 @@ file_name = Path(__file__)
 LOGGER = get_logger(logger_name=file_name.stem, path=file_name.parent)
 PIC_COMMAND = "pic"
 
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /start is issued."""
     user = update.effective_user
