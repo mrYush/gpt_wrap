@@ -5,10 +5,10 @@ from settings import MODEL_NAME, TEMPERATURE, MAX_TOKENS, OPENAI_TOKEN
 openai.api_key = OPENAI_TOKEN
 
 
-def get_answer(test):
+def get_answer(text: str) -> str:
     response = openai.Completion.create(
         model=MODEL_NAME,
-        prompt=test,
+        prompt=text,
         temperature=TEMPERATURE,
         max_tokens=MAX_TOKENS
     )
