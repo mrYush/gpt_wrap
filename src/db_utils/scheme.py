@@ -79,5 +79,5 @@ def get_last_n_message(user_id: int, count: int):
     conversation = pd.DataFrame.from_dict([
         {'role': msg.role, 'content': msg.content, 'timestamp': msg.timestamp}
         for msg in all_messages
-    ]).sort_values('timestamp', ascending=True).tail(count)
+    ]).sort_values('timestamp', ascending=True).tail(count * 2)
     return conversation[['role', 'content']].to_dict(orient='records')
