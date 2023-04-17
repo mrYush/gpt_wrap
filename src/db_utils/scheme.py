@@ -1,7 +1,8 @@
 import logging
 from typing import Optional
 
-from mongoengine import Document, StringField, IntField, connect, BooleanField
+import pandas as pd
+from mongoengine import Document, StringField, IntField, connect, BooleanField, FloatField
 from telegram import User
 
 LOGGER = logging.getLogger()
@@ -21,17 +22,12 @@ class UsersCollection(Document):
     meta = {'db_alias': 'users'}
 
 
-class ContextsCollection(Document):
-    user_id = IntField(required=True)
-    context_name = StringField()
-    meta = {'db_alias': 'contexts'}
-
-
-class RequestsCollection(Document):
-    user_id = IntField(required=True)
+class ConversationCollection(Document):
+    telegram_id = IntField(required=True)
     context_id = IntField()
     role = StringField()
-    text = StringField()
+    content = StringField()
+    timestamp = FloatField()
     meta = {'db_alias': 'requests'}
 
 
