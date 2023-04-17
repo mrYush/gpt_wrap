@@ -77,7 +77,7 @@ async def make_picture(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def choose_context(update: Update, context: ContextTypes.DEFAULT_TYPE):
     wo_context = InlineKeyboardButton(text='без контекста', callback_data="context_0")
-    last_10 = InlineKeyboardButton(text='последние 10 сообщений', callback_data="context_10")
+    last_10 = InlineKeyboardButton(text='последние N сообщений', callback_data="context_10")
     urlkb = InlineKeyboardMarkup(inline_keyboard=[[wo_context, last_10]])
     await update.message.reply_text("вот", reply_markup=urlkb)
 
