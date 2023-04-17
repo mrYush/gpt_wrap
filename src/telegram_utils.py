@@ -22,7 +22,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /help is issued."""
-    await update.message.reply_text("Help!")
+    user = update.effective_user
+    msg = (
+        f"Hello, {user.name}!\nSend me a message and I answer you.\n"
+        f"Send /pic + description and I'll create an image.\n"
+        f"Without context, I can respond rapidly (4-5 seconds).\n"
+        f"If You want to use context send me "
+        f"/context and follow the instructions.")
+    await update.message.reply_text(msg)
 
 
 async def gpt_answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
