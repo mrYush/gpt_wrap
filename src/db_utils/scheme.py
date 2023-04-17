@@ -72,3 +72,12 @@ def set_current_context(user: User, context_name: str) -> Optional[int]:
         context_num = None
     mongo_user.update(current_context=context_num)
     return context_num
+
+
+def get_last_n_message(user_id: int, count: int):
+    all_messages = ConversationCollection.objects(telegram_id=user_id)
+    conversation = pd.DataFrame.from_dict([
+        {'role': msg.role, 'content': msg.content, 'timestamp': msg.timestamp}
+        for msg in all_messages
+    ]).sort_values('timestamp', ascending=True).tail(count)
+    return conversation[['role', 'content']].to_dict(orient='records')

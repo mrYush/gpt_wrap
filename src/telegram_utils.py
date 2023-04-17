@@ -1,11 +1,12 @@
 """Module for telegram handlers"""
 import logging
 import re
+from datetime import datetime
 
 from telegram import Update, ForceReply, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes
 
-from db_utils.scheme import check_user, set_current_context
+from db_utils.scheme import check_user, set_current_context, ConversationCollection, get_last_n_message
 from src.gpt_utils import get_answer, get_gen_pic_url
 
 LOGGER = logging.getLogger()
@@ -39,9 +40,29 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 async def gpt_answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Echo the user message."""
     user = update.effective_user
-    text = get_answer(text=update.message.text)
-
-    await update.message.reply_text(text)
+    mongo_user = check_user(user=user, return_mongo_user=True)
+    current_context = mongo_user.current_context
+    request = update.message.text
+    ConversationCollection(
+        telegram_id=user.id,
+        context_id=mongo_user.current_context,
+        role='user',
+        content=request,
+        timestamp=datetime.now().timestamp()
+    ).save()
+    if current_context is None:
+        kwargs = {'prompt': request}
+    else:
+        kwargs = {'messages': get_last_n_message(user_id=user.id, count=10)}
+    response = get_answer(**kwargs)
+    ConversationCollection(
+        telegram_id=user.id,
+        context_id=mongo_user.current_context,
+        role='assistant',
+        content=response,
+        timestamp=datetime.now().timestamp()
+    ).save()
+    await update.message.reply_text(response)
 
 
 async def make_picture(update: Update, context: ContextTypes.DEFAULT_TYPE):
