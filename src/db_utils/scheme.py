@@ -46,7 +46,7 @@ def check_user(user: User, return_mongo_user: bool=False):
         LOGGER.warning(msg)
         return False
     else:
-        raise KeyError("Impossible user's count")
+        raise KeyError(f"Impossible user's count {len(possible_users)}")
 
 
 def set_current_context(user: User, context_name: str) -> Optional[int]:
