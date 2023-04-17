@@ -46,7 +46,7 @@ def check_user(user: User, return_mongo_user: bool=False):
         LOGGER.warning(msg)
         return False
     else:
-        raise KeyError("Impossible user's count")
+        raise KeyError(f"Impossible user's count {len(possible_users)}")
 
 
 def set_current_context(user: User, context_name: str) -> Optional[int]:
@@ -79,5 +79,5 @@ def get_last_n_message(user_id: int, count: int):
     conversation = pd.DataFrame.from_dict([
         {'role': msg.role, 'content': msg.content, 'timestamp': msg.timestamp}
         for msg in all_messages
-    ]).sort_values('timestamp', ascending=True).tail(count)
+    ]).sort_values('timestamp', ascending=True).tail(count * 2)
     return conversation[['role', 'content']].to_dict(orient='records')
