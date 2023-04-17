@@ -18,12 +18,9 @@ from pathlib import Path
 
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler
 
-from scrip_utils import get_logger
+from scrip_utils import get_logger, get_kwargs
 from settings import TELEGRAM_TOKEN
-from src.telegram_utils import start, help_command, gpt_answer, make_picture, choose_context, button
-
-file_name = Path(__file__)
-LOGGER = get_logger(logger_name=file_name.stem, path=file_name.parent)
+from src.telegram_utils import start, help_command, gpt_answer, make_picture, choose_context, button, get_user_info
 
 
 def main() -> None:
@@ -43,12 +40,21 @@ def main() -> None:
         CommandHandler("pic", make_picture)
     )
     application.add_handler(
-        CommandHandler('context', choose_context)
+        CommandHandler("context", choose_context)
     )
     application.add_handler(CallbackQueryHandler(button))
+    application.add_handler(
+        CommandHandler("usr", get_user_info)
+    )
     # Run the bot until the user presses Ctrl-C
     application.run_polling()
 
 
 if __name__ == "__main__":
+    FILE_NAME = Path(__file__)
+    default_config_path = (Path(__file__).parent /
+                           f'{Path(__file__).stem}_config.yml')
+    kwargs = get_kwargs(default_config_path=default_config_path).parse_args()
+    LOGGER = get_logger(logger_name=FILE_NAME.stem, path=FILE_NAME.parent,
+                        level=kwargs.logger_level)
     main()
