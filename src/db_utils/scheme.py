@@ -35,6 +35,8 @@ def check_user(user: User, return_mongo_user: bool=False):
     possible_users = UsersCollection.objects(telegram_id=user.id)
     if (len(possible_users) == 1) and return_mongo_user:
         return possible_users[0]
+    elif len(possible_users) == 1:
+        return True
     elif len(possible_users) == 0:
         msg = f"User {user.id}, {user.full_name} wasn't exist. Creating..."
         LOGGER.warning(msg)
