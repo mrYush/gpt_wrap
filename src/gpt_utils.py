@@ -1,3 +1,5 @@
+from typing import Dict, Optional
+
 import openai
 
 from settings import MODEL_NAME, TEMPERATURE, MAX_TOKENS, OPENAI_TOKEN
@@ -5,14 +7,31 @@ from settings import MODEL_NAME, TEMPERATURE, MAX_TOKENS, OPENAI_TOKEN
 openai.api_key = OPENAI_TOKEN
 
 
-def get_answer(text: str) -> str:
-    response = openai.Completion.create(
-        model=MODEL_NAME,
-        prompt=text,
-        temperature=TEMPERATURE,
-        max_tokens=MAX_TOKENS
-    )
-    return response['choices'][0]['text']
+def get_answer(prompt: Optional[str] = None,
+               messages: Optional[Dict[str, str]] = None) -> str:
+    if prompt is not None:
+        ai_kwargs = {
+            'model': MODEL_NAME,
+            'prompt': prompt,
+            'temperature': TEMPERATURE,
+            'max_tokens': MAX_TOKENS
+        }
+        api_resp = openai.Completion.create(
+            **ai_kwargs
+        )
+        response = api_resp['choices'][0]['text']
+    elif messages is not None:
+        ai_kwargs = {
+            'model': "gpt-3.5-turbo",
+            'messages': messages
+        }
+        api_resp = openai.ChatCompletion.create(
+            **ai_kwargs
+        )
+        response = api_resp['choices'][0]['message']['content']
+    else:
+        raise KeyError("at least one must be provided prompt or messages")
+    return response
 
 
 def get_gen_pic_url(text_description: str) -> str:
