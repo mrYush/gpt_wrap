@@ -5,7 +5,9 @@ services:
     ports:
       - "27017:27017"
     volumes:
-      - ./db_files:/data/db mongo
+      - ./db_files:/data/db
 
   gpt_wrapper:
     build: .
+    depends_on:
+      - mongo_db

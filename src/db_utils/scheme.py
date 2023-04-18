@@ -8,8 +8,8 @@ from telegram import User
 
 LOGGER = logging.getLogger()
 
-connect(alias='users', db='my_database')
-connect(alias='requests', db='my_database')
+connect(alias='users', db='my_database', host='mongo_db')
+connect(alias='requests', db='my_database', host='mongo_db')
 
 
 class UsersCollection(Document):
