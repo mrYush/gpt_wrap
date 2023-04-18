@@ -9,7 +9,6 @@ from telegram import User
 LOGGER = logging.getLogger()
 
 connect(alias='users', db='my_database')
-connect(alias='contexts', db='my_database')
 connect(alias='requests', db='my_database')
 
 
