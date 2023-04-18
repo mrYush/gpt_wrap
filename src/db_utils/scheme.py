@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from typing import Optional
 
 import pandas as pd
@@ -19,6 +20,7 @@ class UsersCollection(Document):
     username = StringField()
     is_bot = BooleanField()
     current_context = IntField()
+    start_context_timestamp = FloatField()
     meta = {'db_alias': 'users'}
 
 
@@ -69,6 +71,9 @@ def set_current_context(user: User, context_name: str) -> Optional[int]:
         msg = f"context_name must contains 'context', got {context_name}"
         raise ValueError(msg)
     mongo_user = check_user(user=user, return_mongo_user=True)
+    if 'purge' in context_name:
+        mongo_user.update(start_context_timestamp=datetime.now().timestamp())
+        return mongo_user.current_context
     context_num = int(context_name.split('_')[1])
     if context_num == 0:
         context_num = None
@@ -82,4 +87,10 @@ def get_last_n_message(user_id: int, count: int):
         {'role': msg.role, 'content': msg.content, 'timestamp': msg.timestamp}
         for msg in all_messages
     ]).sort_values('timestamp', ascending=True).tail(count * 2)
+    users = possible_users = UsersCollection.objects(telegram_id=user_id)
+    if len(users) == 1:
+        user = users[0]
+    else:
+        raise KeyError(f"wrong userd. Please check user_id {user_id}")
+    conversation = conversation[conversation['timestamp'] > user.start_context_timestamp]
     return conversation[['role', 'content']].to_dict(orient='records')

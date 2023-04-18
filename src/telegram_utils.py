@@ -3,6 +3,7 @@ import logging
 import re
 from datetime import datetime
 
+from openai import InvalidRequestError
 from telegram import Update, ForceReply, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes
 
@@ -54,14 +55,24 @@ async def gpt_answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         kwargs = {'prompt': request}
     else:
         kwargs = {'messages': get_last_n_message(user_id=user.id, count=10)}
-    response = get_answer(**kwargs)
-    ConversationCollection(
-        telegram_id=user.id,
-        context_id=mongo_user.current_context,
-        role='assistant',
-        content=response,
-        timestamp=datetime.now().timestamp()
-    ).save()
+    try:
+        response = get_answer(**kwargs)
+        ConversationCollection(
+            telegram_id=user.id,
+            context_id=mongo_user.current_context,
+            role='assistant',
+            content=response,
+            timestamp=datetime.now().timestamp()
+        ).save()
+    except InvalidRequestError as error:
+        print(error)
+        response = (
+            "Я только учусь и мне сложно анализировать "
+            "так много сообщений в истории нашей переписки.\n"
+            "Предлагаю сбраосить контекст, и начать заново\n"
+            "Для этого отправьте в чат /context и "
+            "со всей силы нажмите на кнопку 'сбросить контекст'\n"
+            "С момента этого нажатия контекст будет формироваться заново.")
     await update.message.reply_text(response)
 
 
@@ -78,7 +89,8 @@ async def make_picture(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def choose_context(update: Update, context: ContextTypes.DEFAULT_TYPE):
     wo_context = InlineKeyboardButton(text='без контекста', callback_data="context_0")
     last_10 = InlineKeyboardButton(text='последние N сообщений', callback_data="context_10")
-    urlkb = InlineKeyboardMarkup(inline_keyboard=[[wo_context, last_10]])
+    purge = InlineKeyboardButton(text='сбросить контекст', callback_data="context_purge")
+    urlkb = InlineKeyboardMarkup(inline_keyboard=[[wo_context, last_10, purge]])
     await update.message.reply_text("вот", reply_markup=urlkb)
 
 
