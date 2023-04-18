@@ -38,7 +38,8 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     await update.message.reply_text(msg)
 
 
-async def gpt_answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def gpt_answer(update: Update,
+                     context: ContextTypes.DEFAULT_TYPE) -> None:
     """Echo the user message."""
     user = update.effective_user
     mongo_user = check_user(user=user, return_mongo_user=True)
@@ -80,7 +81,8 @@ async def make_picture(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Sends the image generated on request"""
     user = update.effective_user
     LOGGER.info(f"new_request: {user.id}; {user.mention_html()}; {update.message.text}")
-    pic_url = get_gen_pic_url(text_description=re.sub(f"/{PIC_COMMAND}", "", update.message.text))
+    text_description = re.sub(f"/{PIC_COMMAND}", "", update.message.text)
+    pic_url = get_gen_pic_url(text_description=text_description)
     print(pic_url)
     chat_id = update.effective_chat.id
     await context.bot.send_photo(chat_id=chat_id, photo=pic_url)
@@ -90,7 +92,7 @@ async def choose_context(update: Update, context: ContextTypes.DEFAULT_TYPE):
     wo_context = InlineKeyboardButton(text='без контекста', callback_data="context_0")
     last_10 = InlineKeyboardButton(text='последние N сообщений', callback_data="context_10")
     purge = InlineKeyboardButton(text='сбросить контекст', callback_data="context_purge")
-    urlkb = InlineKeyboardMarkup(inline_keyboard=[[wo_context, last_10, purge]])
+    urlkb = InlineKeyboardMarkup(inline_keyboard=[[wo_context], [last_10], [purge]])
     await update.message.reply_text("вот", reply_markup=urlkb)
 
 
@@ -100,12 +102,9 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = update.effective_user
     # CallbackQueries need to be answered, even if no notification to the user is needed
     # Some clients may have trouble otherwise. See https://core.telegram.org/bots/api#callbackquery
-    mes = f"Selected option: {query.data}, {type(query.data)}, User is {user.id}, {context.chat_data}"
+    mes = f"Selected option: {query.data}"
     set_current_context(user=user, context_name=query.data)
     await query.answer(text=mes)
-    # await query.(text=f"Selected option: {query.data}, User is {user.id}")
-    # await context.bot.send_message()
-    # await query.edit_message_text(text=f"Selected option: {query.data}, User is {user.id}")
 
 
 async def get_user_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
