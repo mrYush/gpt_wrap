@@ -8,7 +8,7 @@ from telegram import Update, ForceReply, InlineKeyboardMarkup, InlineKeyboardBut
 from telegram.ext import ContextTypes
 
 from db_utils.scheme import check_user, set_current_context, ConversationCollection, get_last_n_message
-from src.gpt_utils import get_answer, get_gen_pic_url
+from gpt_utils import get_answer, get_gen_pic_url
 
 LOGGER = logging.getLogger()
 PIC_COMMAND = "pic"

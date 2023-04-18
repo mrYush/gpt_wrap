@@ -20,7 +20,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 
 from scrip_utils import get_logger, get_kwargs
 from settings import TELEGRAM_TOKEN
-from src.telegram_utils import start, help_command, gpt_answer, make_picture, choose_context, button, get_user_info
+from telegram_utils import start, help_command, gpt_answer, make_picture, choose_context, button, get_user_info
 
 
 def main() -> None:
