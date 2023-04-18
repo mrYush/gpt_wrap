@@ -50,9 +50,10 @@ Thumbs.db
 
 # configs
 *.yaml
+!docker_compose.yaml
 
 # tmp_files
 *.ipynb_checkpoints/
 jupyter_nb/
 
-
+db_files/

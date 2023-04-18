@@ -14,50 +14,13 @@ Basic Echobot example, repeats messages.
 Press Ctrl-C on the command line or send a signal to the process to stop the
 bot.
 """
-import re
 from pathlib import Path
 
-from telegram import ForceReply, Update
-from telegram.ext import Application, CommandHandler, ContextTypes, \
-    MessageHandler, filters
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler
 
-from gpt_utils import get_answer, get_gen_pic_url
-from scrip_utils import get_logger
+from scrip_utils import get_logger, get_kwargs
 from settings import TELEGRAM_TOKEN
-
-file_name = Path(__file__)
-LOGGER = get_logger(logger_name=file_name.stem, path=file_name.parent)
-PIC_COMMAND = "pic"
-
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Send a message when the command /start is issued."""
-    user = update.effective_user
-    await update.message.reply_html(
-        rf"Hi {user.mention_html()}!",
-        reply_markup=ForceReply(selective=True),
-    )
-
-
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Send a message when the command /help is issued."""
-    await update.message.reply_text("Help!")
-
-
-async def gpt_answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Echo the user message."""
-    user = update.effective_user
-    LOGGER.info(f"new_request: {user.id}; {user.mention_html()}; {update.message.text}")
-    await update.message.reply_text(get_answer(update.message.text))
-
-
-async def make_picture(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Sends the image generated on request"""
-    user = update.effective_user
-    LOGGER.info(f"new_request: {user.id}; {user.mention_html()}; {update.message.text}")
-    pic_url = get_gen_pic_url(text_description=re.sub(f"/{PIC_COMMAND}", "", update.message.text))
-    print(pic_url)
-    chat_id = update.effective_chat.id
-    await context.bot.send_photo(chat_id=chat_id, photo=pic_url)
+from telegram_utils import start, help_command, gpt_answer, make_picture, choose_context, button, get_user_info
 
 
 def main() -> None:
@@ -76,10 +39,22 @@ def main() -> None:
     application.add_handler(
         CommandHandler("pic", make_picture)
     )
-
+    application.add_handler(
+        CommandHandler("context", choose_context)
+    )
+    application.add_handler(CallbackQueryHandler(button))
+    application.add_handler(
+        CommandHandler("usr", get_user_info)
+    )
     # Run the bot until the user presses Ctrl-C
     application.run_polling()
 
 
 if __name__ == "__main__":
+    FILE_NAME = Path(__file__)
+    default_config_path = (Path(__file__).parent /
+                           f'{Path(__file__).stem}_config.yml')
+    kwargs = get_kwargs(default_config_path=default_config_path).parse_args()
+    LOGGER = get_logger(logger_name=FILE_NAME.stem, path=FILE_NAME.parent,
+                        level=kwargs.logger_level)
     main()
