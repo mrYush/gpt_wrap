@@ -1,12 +1,14 @@
 import logging
+from copy import deepcopy
 from datetime import datetime
 from typing import Optional
 
 import pandas as pd
+import tiktoken as tiktoken
 from mongoengine import Document, StringField, IntField, connect, BooleanField, FloatField
 from telegram import User
 
-from settings import MONGO_HOST
+from settings import MONGO_HOST, MODEL_NAME, MAX_TOKENS_CONTEXT_HISTORY
 
 LOGGER = logging.getLogger()
 
@@ -88,6 +90,48 @@ def set_current_context(user: User, context_name: str) -> Optional[int]:
         context_num = None
     mongo_user.update(current_context=context_num)
     return context_num
+
+
+def num_tokens_from_string(string: str) -> int:
+    """Returns the number of tokens in a text string."""
+    encoding = tiktoken.encoding_for_model(MODEL_NAME)
+    num_tokens = len(encoding.encode(string))
+    return num_tokens
+
+
+def get_last_n_message_tokens(user_id: int,
+                              tokens: int = MAX_TOKENS_CONTEXT_HISTORY,
+                              system_prompt: str = None):
+
+    all_messages = ConversationCollection.objects(telegram_id=user_id)
+    all_messages_list = [{'role': msg.role, 'content': msg.content, 'timestamp': msg.timestamp}
+        for msg in all_messages]
+    all_messages_list_sorted = sorted(all_messages_list, key=lambda d: d['timestamp'])
+    messages_copy = deepcopy(all_messages_list_sorted)
+
+    filtered_messages = list()
+    massage_length = 0
+
+    # make system prompt available as first message
+    if system_prompt is not None:
+        filtered_messages.append({'role': 'system', 'content': system_prompt})
+        massage_length += num_tokens_from_string(system_prompt)
+
+    # make last user message available as last message
+    last_message = messages_copy[-1]['content']
+    massage_length += num_tokens_from_string(last_message)
+    filtered_messages.append(messages_copy[-1])
+    messages_copy.pop(-1)
+
+    if len(messages_copy) != 0:
+        messages_copy.reverse()
+        for index, m in enumerate(messages_copy):
+            this_message_length = num_tokens_from_string(m['content'])
+            if massage_length + this_message_length <= tokens:
+                filtered_messages.insert(0, m)
+                massage_length += this_message_length
+
+    return filtered_messages
 
 
 def get_last_n_message(user_id: int, count: int):

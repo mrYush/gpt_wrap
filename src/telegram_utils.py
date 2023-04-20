@@ -7,7 +7,8 @@ from openai import InvalidRequestError
 from telegram import Update, ForceReply, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes
 
-from db_utils.scheme import check_user, set_current_context, ConversationCollection, get_last_n_message
+from db_utils.scheme import check_user, set_current_context, ConversationCollection, get_last_n_message, \
+    get_last_n_message_tokens
 from gpt_utils import get_answer, get_gen_pic_url
 
 LOGGER = logging.getLogger()
@@ -55,7 +56,8 @@ async def gpt_answer(update: Update,
     if current_context is None:
         kwargs = {'prompt': request}
     else:
-        kwargs = {'messages': get_last_n_message(user_id=user.id, count=10)}
+        # kwargs = {'messages': get_last_n_message(user_id=user.id, count=10)}
+        kwargs = {'messages': get_last_n_message_tokens(user_id=user.id, system_prompt=None)}
     try:
         response = get_answer(**kwargs)
         ConversationCollection(
@@ -70,7 +72,7 @@ async def gpt_answer(update: Update,
         response = (
             "Я только учусь и мне сложно анализировать "
             "так много сообщений в истории нашей переписки.\n"
-            "Предлагаю сбраосить контекст, и начать заново\n"
+            "Предлагаю сбросить контекст, и начать заново\n"
             "Для этого отправьте в чат /context и "
             "со всей силы нажмите на кнопку 'сбросить контекст'\n"
             "С момента этого нажатия контекст будет формироваться заново.")

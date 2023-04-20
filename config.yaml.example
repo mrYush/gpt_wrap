@@ -4,3 +4,5 @@ MAX_TOKENS: 3000
 TELEGRAM_TOKEN: "put here you telegram token"
 OPENAI_TOKEN: "put here you openai token"
 MONGO_HOST: 'mongo_db'
+MAX_TOKENS_CONTEXT_HISTORY: 1800
+MAX_TOKENS_CONTEXT_OUTPUT: 1000
