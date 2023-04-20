@@ -8,9 +8,9 @@ from telegram import User
 
 LOGGER = logging.getLogger()
 
-connect(alias='users', db='my_database', host='mongo_db')  # localhost
-connect(alias='requests', db='my_database', host='mongo_db')  # localhost
-connect(alias='context', db='my_database', host='mongo_db')  # localhost
+connect(alias='users', db='my_database', host='mongo_db')
+connect(alias='requests', db='my_database', host='mongo_db')
+connect(alias='context', db='my_database', host='mongo_db')
 
 
 class SystemContext(Document):
