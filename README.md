@@ -18,7 +18,7 @@ be sure that you fill all parameters in config correctly
 
 ### launch
 
-In repo root lounch
+In repo root launch
 ```commandline
 docker-compose up
 ```
