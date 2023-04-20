@@ -8,8 +8,15 @@ from telegram import User
 
 LOGGER = logging.getLogger()
 
-connect(alias='users', db='my_database', host='mongo_db')
-connect(alias='requests', db='my_database', host='mongo_db')
+connect(alias='users', db='my_database', host='mongo_db')  # localhost
+connect(alias='requests', db='my_database', host='mongo_db')  # localhost
+connect(alias='context', db='my_database', host='mongo_db')  # localhost
+
+
+class SystemContext(Document):
+    context_id = IntField(required=True)
+    context = StringField()
+    meta = {'db_alias': 'context'}
 
 
 class UsersCollection(Document):
