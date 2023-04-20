@@ -6,15 +6,18 @@ import pandas as pd
 from mongoengine import Document, StringField, IntField, connect, BooleanField, FloatField
 from telegram import User
 
+from settings import MONGO_HOST
+
 LOGGER = logging.getLogger()
 
-connect(alias='users', db='my_database', host='mongo_db')
-connect(alias='requests', db='my_database', host='mongo_db')
-connect(alias='context', db='my_database', host='mongo_db')
+connect(alias='users', db='my_database', host=MONGO_HOST)
+connect(alias='requests', db='my_database', host=MONGO_HOST)
+connect(alias='context', db='my_database', host=MONGO_HOST)
 
 
 class SystemContext(Document):
     context_id = IntField(required=True)
+    context_alias = StringField()
     context = StringField()
     meta = {'db_alias': 'context'}
 
