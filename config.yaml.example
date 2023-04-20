@@ -1,7 +1,7 @@
 MODEL_NAME: "text-davinci-003"
 TEMPERATURE: 0
 MAX_TOKENS: 3000
-TELEGRAM_TOKEN: "put here you telegram token"
+TELEGRAM_TOKEN: "test token"
 OPENAI_TOKEN: "put here you openai token"
 MONGO_HOST: 'mongo_db'
 MAX_TOKENS_CONTEXT_HISTORY: 1800

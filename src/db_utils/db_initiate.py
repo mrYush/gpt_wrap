@@ -1,4 +1,4 @@
-from db_utils.scheme import SystemContext
+from scheme import SystemContext
 from system_prompts.prompts import SYSTEM_PROMPTS
 
 if __name__ == '__main__':

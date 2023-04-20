@@ -1,12 +1,18 @@
 import logging
+import sys
 from copy import deepcopy
 from datetime import datetime
+from pathlib import Path
 from typing import Optional
 
 import pandas as pd
-import tiktoken as tiktoken
+import tiktoken
 from mongoengine import Document, StringField, IntField, connect, BooleanField, FloatField
 from telegram import User
+
+file = Path(__file__).resolve()
+parent, root = file.parent, file.parents[1]
+sys.path.append(str(root))
 
 from settings import MONGO_HOST, MODEL_NAME, MAX_TOKENS_CONTEXT_HISTORY
 
