@@ -50,7 +50,7 @@ Thumbs.db
 
 # configs
 *.yaml
-!docker_compose.yaml
+!docker-compose.yaml
 
 # tmp_files
 *.ipynb_checkpoints/
