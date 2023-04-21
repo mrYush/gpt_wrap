@@ -94,9 +94,7 @@ async def make_picture(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def show_context(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Send all current context"""
     user = update.effective_user
-    LOGGER.info(f"new_request: {user.id}; {user.mention_html()}; {update.message.text}")
     context_all = get_last_n_message_tokens(user_id=user.id)
-    LOGGER.info(f"new_request: {user.id}; {user.mention_html()}; {context_all}")
     if len(context_all) > 0:
         rows = ['{}: {}'.format(row['role'], row['content']) for row in context_all]
     else:
