@@ -141,6 +141,8 @@ def get_last_n_message_tokens(user_id: int,
             if massage_length + this_message_length <= tokens:
                 filtered_messages.insert(0, parse_messages(m))
                 massage_length += this_message_length
+            else:
+                break
 
     return filtered_messages
 
