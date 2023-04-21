@@ -13,6 +13,7 @@ from gpt_utils import get_answer, get_gen_pic_url
 
 LOGGER = logging.getLogger()
 PIC_COMMAND = "pic"
+SHOW_CONTEXT = 'show_context'
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -88,6 +89,19 @@ async def make_picture(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print(pic_url)
     chat_id = update.effective_chat.id
     await context.bot.send_photo(chat_id=chat_id, photo=pic_url)
+
+
+async def show_context(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Send all current context"""
+    user = update.effective_user
+    LOGGER.info(f"new_request: {user.id}; {user.mention_html()}; {update.message.text}")
+    context_all = get_last_n_message_tokens(user_id=user.id)
+    LOGGER.info(f"new_request: {user.id}; {user.mention_html()}; {context_all}")
+    if len(context_all) > 0:
+        rows = ['{}: {}'.format(row['role'], row['content']) for row in context_all]
+    else:
+        rows = ['There is no context for now']
+    [await update.message.reply_text(row) for row in rows]
 
 
 async def choose_context(update: Update, context: ContextTypes.DEFAULT_TYPE):

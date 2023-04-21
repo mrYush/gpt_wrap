@@ -1,8 +1,6 @@
 import logging
-import sys
 from copy import deepcopy
 from datetime import datetime
-from pathlib import Path
 from typing import Optional
 
 import pandas as pd
@@ -10,11 +8,11 @@ import tiktoken
 from mongoengine import Document, StringField, IntField, connect, BooleanField, FloatField
 from telegram import User
 
+from settings import MONGO_HOST, MODEL_NAME, MAX_TOKENS_CONTEXT_HISTORY
+
 # file = Path(__file__).resolve()
 # parent, root = file.parent, file.parents[1]
 # sys.path.append(str(root))
-
-from settings import MONGO_HOST, MODEL_NAME, MAX_TOKENS_CONTEXT_HISTORY
 
 LOGGER = logging.getLogger()
 
@@ -50,7 +48,7 @@ class ConversationCollection(Document):
     meta = {'db_alias': 'requests'}
 
 
-def check_user(user: User, return_mongo_user: bool=False):
+def check_user(user: User, return_mongo_user: bool = False):
     possible_users = UsersCollection.objects(telegram_id=user.id)
     if (len(possible_users) == 1) and return_mongo_user:
         return possible_users[0]
@@ -105,13 +103,20 @@ def num_tokens_from_string(string: str) -> int:
     return num_tokens
 
 
+def parse_messages(message: dict) -> dict:
+    return {'role': message['role'], 'content': message['content']}
+
+
 def get_last_n_message_tokens(user_id: int,
                               tokens: int = MAX_TOKENS_CONTEXT_HISTORY,
                               system_prompt: str = None):
-
     all_messages = ConversationCollection.objects(telegram_id=user_id)
     all_messages_list = [{'role': msg.role, 'content': msg.content, 'timestamp': msg.timestamp}
-        for msg in all_messages]
+                         for msg in all_messages]
+
+    if len(all_messages_list) == 0:
+        return list()
+
     all_messages_list_sorted = sorted(all_messages_list, key=lambda d: d['timestamp'])
     messages_copy = deepcopy(all_messages_list_sorted)
 
@@ -126,7 +131,7 @@ def get_last_n_message_tokens(user_id: int,
     # make last user message available as last message
     last_message = messages_copy[-1]['content']
     massage_length += num_tokens_from_string(last_message)
-    filtered_messages.append(messages_copy[-1])
+    filtered_messages.append(parse_messages(messages_copy[-1]))
     messages_copy.pop(-1)
 
     if len(messages_copy) != 0:
@@ -134,7 +139,7 @@ def get_last_n_message_tokens(user_id: int,
         for index, m in enumerate(messages_copy):
             this_message_length = num_tokens_from_string(m['content'])
             if massage_length + this_message_length <= tokens:
-                filtered_messages.insert(0, m)
+                filtered_messages.insert(0, parse_messages(m))
                 massage_length += this_message_length
 
     return filtered_messages

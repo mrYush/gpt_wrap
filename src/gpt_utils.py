@@ -2,7 +2,7 @@ from typing import Dict, Optional
 
 import openai
 
-from settings import MODEL_NAME, TEMPERATURE, MAX_TOKENS, OPENAI_TOKEN
+from settings import MODEL_NAME, TEMPERATURE, MAX_TOKENS, OPENAI_TOKEN, MAX_TOKENS_CONTEXT_OUTPUT
 
 openai.api_key = OPENAI_TOKEN
 
@@ -23,7 +23,9 @@ def get_answer(prompt: Optional[str] = None,
     elif messages is not None:
         ai_kwargs = {
             'model': "gpt-3.5-turbo",
-            'messages': messages
+            'messages': messages,
+            'temperature': TEMPERATURE,
+            'max_tokens': MAX_TOKENS_CONTEXT_OUTPUT
         }
         api_resp = openai.ChatCompletion.create(
             **ai_kwargs
