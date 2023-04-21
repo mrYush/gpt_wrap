@@ -10,9 +10,9 @@ import tiktoken
 from mongoengine import Document, StringField, IntField, connect, BooleanField, FloatField
 from telegram import User
 
-file = Path(__file__).resolve()
-parent, root = file.parent, file.parents[1]
-sys.path.append(str(root))
+# file = Path(__file__).resolve()
+# parent, root = file.parent, file.parents[1]
+# sys.path.append(str(root))
 
 from settings import MONGO_HOST, MODEL_NAME, MAX_TOKENS_CONTEXT_HISTORY
 
