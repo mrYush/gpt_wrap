@@ -14,3 +14,7 @@ MAX_TOKENS = os.environ.get('MAX_TOKENS', default=config.get('MAX_TOKENS'))
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN', default=config.get('TELEGRAM_TOKEN'))
 OPENAI_TOKEN = os.environ.get('OPENAI_TOKEN', default=config.get('OPENAI_TOKEN'))
 MONGO_HOST = os.environ.get('MONGO_HOST', default=config.get('MONGO_HOST', 'localhost'))
+MAX_TOKENS_CONTEXT_HISTORY = os.environ.get('MAX_TOKENS_CONTEXT_HISTORY',
+                                            default=config.get('MAX_TOKENS_CONTEXT_HISTORY', 1800))
+MAX_TOKENS_CONTEXT_OUTPUT = os.environ.get('MAX_TOKENS_CONTEXT_OUTPUT',
+                                           default=config.get('MAX_TOKENS_CONTEXT_OUTPUT', 1000))

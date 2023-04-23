@@ -7,11 +7,14 @@ from openai import InvalidRequestError
 from telegram import Update, ForceReply, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes
 
-from db_utils.scheme import check_user, set_current_context, ConversationCollection, get_last_n_message
+from db_utils.scheme import check_user, set_current_context, ConversationCollection, get_last_n_message, \
+    get_last_n_message_tokens
 from gpt_utils import get_answer, get_gen_pic_url
 
 LOGGER = logging.getLogger()
 PIC_COMMAND = "pic"
+SHOW_CONTEXT = 'show_context'
+CONTEXT = 'context'
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -55,7 +58,8 @@ async def gpt_answer(update: Update,
     if current_context is None:
         kwargs = {'prompt': request}
     else:
-        kwargs = {'messages': get_last_n_message(user_id=user.id, count=10)}
+        # kwargs = {'messages': get_last_n_message(user_id=user.id, count=10)}
+        kwargs = {'messages': get_last_n_message_tokens(user_id=user.id, system_prompt=None)}
     try:
         response = get_answer(**kwargs)
         ConversationCollection(
@@ -70,10 +74,11 @@ async def gpt_answer(update: Update,
         response = (
             "Я только учусь и мне сложно анализировать "
             "так много сообщений в истории нашей переписки.\n"
-            "Предлагаю сбраосить контекст, и начать заново\n"
+            "Предлагаю сбросить контекст, и начать заново\n"
             "Для этого отправьте в чат /context и "
             "со всей силы нажмите на кнопку 'сбросить контекст'\n"
             "С момента этого нажатия контекст будет формироваться заново.")
+
     await update.message.reply_text(response)
 
 
@@ -86,6 +91,17 @@ async def make_picture(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print(pic_url)
     chat_id = update.effective_chat.id
     await context.bot.send_photo(chat_id=chat_id, photo=pic_url)
+
+
+async def show_context(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Send all current context"""
+    user = update.effective_user
+    context_all = get_last_n_message_tokens(user_id=user.id)
+    if len(context_all) > 0:
+        rows = ['{}: {}'.format(row['role'], row['content']) for row in context_all]
+    else:
+        rows = ['There is no context for now']
+    [await update.message.reply_text(row) for row in rows]
 
 
 async def choose_context(update: Update, context: ContextTypes.DEFAULT_TYPE):

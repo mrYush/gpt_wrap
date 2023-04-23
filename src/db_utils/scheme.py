@@ -1,17 +1,31 @@
 import logging
+from copy import deepcopy
 from datetime import datetime
 from typing import Optional
 
 import pandas as pd
+import tiktoken
 from mongoengine import Document, StringField, IntField, connect, BooleanField, FloatField
 from telegram import User
 
-from settings import MONGO_HOST
+from settings import MONGO_HOST, MODEL_NAME, MAX_TOKENS_CONTEXT_HISTORY
+
+# file = Path(__file__).resolve()
+# parent, root = file.parent, file.parents[1]
+# sys.path.append(str(root))
 
 LOGGER = logging.getLogger()
 
 connect(alias='users', db='my_database', host=MONGO_HOST)
 connect(alias='requests', db='my_database', host=MONGO_HOST)
+connect(alias='context', db='my_database', host=MONGO_HOST)
+
+
+class SystemContext(Document):
+    context_id = IntField(required=True)
+    context_alias = StringField()
+    context = StringField()
+    meta = {'db_alias': 'context'}
 
 
 class UsersCollection(Document):
@@ -34,7 +48,7 @@ class ConversationCollection(Document):
     meta = {'db_alias': 'requests'}
 
 
-def check_user(user: User, return_mongo_user: bool=False):
+def check_user(user: User, return_mongo_user: bool = False):
     possible_users = UsersCollection.objects(telegram_id=user.id)
     if (len(possible_users) == 1) and return_mongo_user:
         return possible_users[0]
@@ -80,6 +94,48 @@ def set_current_context(user: User, context_name: str) -> Optional[int]:
         context_num = None
     mongo_user.update(current_context=context_num)
     return context_num
+
+
+def num_tokens_from_string(string: str) -> int:
+    """Returns the number of tokens in a text string."""
+    encoding = tiktoken.encoding_for_model(MODEL_NAME)
+    num_tokens = len(encoding.encode(string))
+    return num_tokens
+
+
+def parse_messages(message: dict) -> dict:
+    return {'role': message['role'], 'content': message['content']}
+
+
+def get_last_n_message_tokens(user_id: int,
+                              tokens: int = MAX_TOKENS_CONTEXT_HISTORY,
+                              system_prompt: str = None):
+    all_messages = ConversationCollection.objects(telegram_id=user_id)
+    all_messages_list = [{'role': msg.role, 'content': msg.content, 'timestamp': msg.timestamp}
+                         for msg in all_messages]
+
+    all_messages_list_sorted = sorted(all_messages_list, key=lambda d: d['timestamp'])
+    filtered_messages = list()
+    massage_length = 0
+
+    # make system prompt available as first message
+    if system_prompt is not None:
+        filtered_messages.append({'role': 'system', 'content': system_prompt})
+        massage_length += num_tokens_from_string(system_prompt)
+
+    all_messages_list_sorted.reverse()
+    for index, m in enumerate(all_messages_list_sorted):
+        this_message_length = num_tokens_from_string(m['content'])
+        if massage_length + this_message_length <= tokens:
+            filtered_messages.insert(0, parse_messages(m))
+            massage_length += this_message_length
+        else:
+            break
+
+    if len(filtered_messages) == 0:
+        filtered_messages.append({'role': 'system', 'content': 'no context'})
+
+    return filtered_messages
 
 
 def get_last_n_message(user_id: int, count: int):
