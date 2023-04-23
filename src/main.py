@@ -20,7 +20,8 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 
 from scrip_utils import get_logger, get_kwargs
 from settings import TELEGRAM_TOKEN
-from telegram_utils import start, help_command, gpt_answer, make_picture, choose_context, button, get_user_info
+from telegram_utils import start, help_command, gpt_answer, make_picture, choose_context, button, get_user_info, \
+    show_context, SHOW_CONTEXT, PIC_COMMAND, CONTEXT
 
 
 def main() -> None:
@@ -37,10 +38,13 @@ def main() -> None:
         MessageHandler(filters.TEXT & ~filters.COMMAND, gpt_answer)
     )
     application.add_handler(
-        CommandHandler("pic", make_picture)
+        CommandHandler(PIC_COMMAND, make_picture)
     )
     application.add_handler(
-        CommandHandler("context", choose_context)
+        CommandHandler(CONTEXT, choose_context)
+    )
+    application.add_handler(
+        CommandHandler(SHOW_CONTEXT, show_context)
     )
     application.add_handler(CallbackQueryHandler(button))
     application.add_handler(
