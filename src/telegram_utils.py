@@ -4,11 +4,12 @@ import re
 from datetime import datetime
 
 from openai import InvalidRequestError
-from telegram import Update, ForceReply, InlineKeyboardMarkup, InlineKeyboardButton
+from telegram import Update, ForceReply, InlineKeyboardMarkup, \
+    InlineKeyboardButton
 from telegram.ext import ContextTypes
 
-from db_utils.scheme import check_user, set_current_context, ConversationCollection, get_last_n_message, \
-    get_last_n_message_tokens
+from db_utils.scheme import check_user, set_current_context, \
+    ConversationCollection, get_last_messages
 from gpt_utils import get_answer, get_gen_pic_url
 
 LOGGER = logging.getLogger()
@@ -59,7 +60,9 @@ async def gpt_answer(update: Update,
         kwargs = {'prompt': request}
     else:
         # kwargs = {'messages': get_last_n_message(user_id=user.id, count=10)}
-        kwargs = {'messages': get_last_n_message_tokens(user_id=user.id, system_prompt=None)}
+        kwargs = {
+            'messages': get_last_messages(user_id=user.id, system_prompt=None)
+        }
     try:
         response = get_answer(**kwargs)
         ConversationCollection(
@@ -96,7 +99,7 @@ async def make_picture(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def show_context(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Send all current context"""
     user = update.effective_user
-    context_all = get_last_n_message_tokens(user_id=user.id)
+    context_all = get_last_messages(user_id=user.id)
     if len(context_all) > 0:
         rows = ['{}: {}'.format(row['role'], row['content']) for row in context_all]
     else:

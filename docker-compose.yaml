@@ -11,3 +11,5 @@ services:
     build: .
     depends_on:
       - mongo_db
+    env_file:
+      - .env.development

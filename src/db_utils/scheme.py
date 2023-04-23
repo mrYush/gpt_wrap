@@ -2,16 +2,13 @@ import logging
 from datetime import datetime
 from typing import Optional
 
-import pandas as pd
 import tiktoken
-from mongoengine import Document, StringField, IntField, connect, BooleanField, FloatField
+from mongoengine import Document, StringField, IntField, connect, \
+    BooleanField, FloatField
 from telegram import User
 
+from db_utils.utils import get_several_keys
 from settings import MONGO_HOST, MODEL_NAME, MAX_TOKENS_CONTEXT_HISTORY
-
-# file = Path(__file__).resolve()
-# parent, root = file.parent, file.parents[1]
-# sys.path.append(str(root))
 
 LOGGER = logging.getLogger()
 
@@ -21,7 +18,6 @@ connect(alias='context', db='my_database', host=MONGO_HOST)
 
 
 class SystemContext(Document):
-    context_id = IntField(required=True)
     context_alias = StringField()
     context = StringField()
     meta = {'db_alias': 'context'}
@@ -102,18 +98,33 @@ def num_tokens_from_string(string: str) -> int:
     return num_tokens
 
 
-def parse_messages(message: dict) -> dict:
-    return {'role': message['role'], 'content': message['content']}
+def get_last_messages(user_id: int,
+                      tokens: int = MAX_TOKENS_CONTEXT_HISTORY,
+                      system_prompt: Optional[str] = None):
+    """
+    Get last messages from user's conversation history. All message will
+    be less than tokens. If system_prompt exists, it will be added.
+    Parameters
+    ----------
+    user_id: int
+        telegram user id
+    tokens: int
+        max number of tokens in all messages
+    system_prompt: Optional[str]
+        system prompt
 
+    Returns
+    -------
 
-def get_last_n_message_tokens(user_id: int,
-                              tokens: int = MAX_TOKENS_CONTEXT_HISTORY,
-                              system_prompt: str = None):
+    """
     all_messages = ConversationCollection.objects(telegram_id=user_id)
-    all_messages_list = [{'role': msg.role, 'content': msg.content, 'timestamp': msg.timestamp}
+    all_messages_list = [{'role': msg.role, 'content': msg.content,
+                          'timestamp': msg.timestamp}
                          for msg in all_messages]
 
-    all_messages_list_sorted = sorted(all_messages_list, key=lambda d: d['timestamp'])
+    all_messages_list_sorted = sorted(all_messages_list,
+                                      key=lambda d: d['timestamp'],
+                                      reverse=True)
     filtered_messages = list()
     massage_length = 0
 
@@ -122,11 +133,12 @@ def get_last_n_message_tokens(user_id: int,
         filtered_messages.append({'role': 'system', 'content': system_prompt})
         massage_length += num_tokens_from_string(system_prompt)
 
-    all_messages_list_sorted.reverse()
-    for index, m in enumerate(all_messages_list_sorted):
-        this_message_length = num_tokens_from_string(m['content'])
+    for index, message in enumerate(all_messages_list_sorted):
+        this_message_length = num_tokens_from_string(message['content'])
         if massage_length + this_message_length <= tokens:
-            filtered_messages.insert(0, parse_messages(m))
+            filtered_messages.insert(
+                0, get_several_keys(item=message, keys=['role', 'content'])
+            )
             massage_length += this_message_length
         else:
             break
@@ -135,18 +147,3 @@ def get_last_n_message_tokens(user_id: int,
         filtered_messages.append({'role': 'system', 'content': 'no context'})
 
     return filtered_messages
-
-
-def get_last_n_message(user_id: int, count: int):
-    all_messages = ConversationCollection.objects(telegram_id=user_id)
-    conversation = pd.DataFrame.from_dict([
-        {'role': msg.role, 'content': msg.content, 'timestamp': msg.timestamp}
-        for msg in all_messages
-    ]).sort_values('timestamp', ascending=True).tail(count * 2)
-    users = possible_users = UsersCollection.objects(telegram_id=user_id)
-    if len(users) == 1:
-        user = users[0]
-    else:
-        raise KeyError(f"wrong userd. Please check user_id {user_id}")
-    conversation = conversation[conversation['timestamp'] > user.start_context_timestamp]
-    return conversation[['role', 'content']].to_dict(orient='records')
