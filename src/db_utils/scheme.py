@@ -8,6 +8,7 @@ import tiktoken
 from mongoengine import Document, StringField, IntField, connect, BooleanField, FloatField
 from telegram import User
 
+from db_utils.utils import get_several_keys
 from settings import MONGO_HOST, MODEL_NAME, MAX_TOKENS_CONTEXT_HISTORY
 
 # file = Path(__file__).resolve()
