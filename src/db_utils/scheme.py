@@ -1,5 +1,4 @@
 import logging
-from copy import deepcopy
 from datetime import datetime
 from typing import Optional
 
