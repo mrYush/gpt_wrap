@@ -11,7 +11,7 @@ def get_answer(prompt: Optional[str] = None,
                messages: Optional[Dict[str, str]] = None) -> str:
     if prompt is not None:
         ai_kwargs = {
-            'model': MODEL_NAME,
+            'model': "text-davinci-003",
             'prompt': prompt,
             'temperature': TEMPERATURE,
             'max_tokens': MAX_TOKENS
