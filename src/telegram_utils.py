@@ -8,8 +8,8 @@ from telegram import Update, ForceReply, InlineKeyboardMarkup, \
     InlineKeyboardButton
 from telegram.ext import ContextTypes
 
-from db_utils.scheme import check_user, set_current_context, \
-    ConversationCollection, get_last_messages
+from db_utils.scheme import set_current_context, \
+    ConversationCollection, get_last_messages, check_user
 from gpt_utils import get_answer, get_gen_pic_url
 
 LOGGER = logging.getLogger()
@@ -137,3 +137,14 @@ async def get_user_info(update: Update,
     user = update.effective_user
     # print(user.id, user.full_name)
     await update.message.reply_text(text=f"User is {user.id}")
+
+
+async def set_system_prompt(update: Update,
+                            context: ContextTypes.DEFAULT_TYPE) -> None:
+    """return user_info"""
+    user = update.effective_user
+    mongo_user = check_user(user=user, return_mongo_user=True)
+    mongo_user.update(current_context=update.message.text)
+    await update.message.reply_text(
+        text=f"System prompt {update.message.text} is set"
+    )
