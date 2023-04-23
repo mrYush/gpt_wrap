@@ -1,3 +1,4 @@
+"""System prompts for the bot."""
 SYSTEM_PROMPTS = [
     {
         'context_alias': 'test',
