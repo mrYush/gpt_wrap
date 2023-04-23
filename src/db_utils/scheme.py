@@ -100,7 +100,8 @@ def num_tokens_from_string(string: str) -> int:
 
 def get_last_messages(user_id: int,
                       tokens: int = MAX_TOKENS_CONTEXT_HISTORY,
-                      system_prompt: Optional[str] = None):
+                      system_prompt: Optional[str] = None,
+                      start_from_timestamp: Optional[int] = None):
     """
     Get last messages from user's conversation history. All message will
     be less than tokens. If system_prompt exists, it will be added.
@@ -112,7 +113,8 @@ def get_last_messages(user_id: int,
         max number of tokens in all messages
     system_prompt: Optional[str]
         system prompt
-
+    start_from_timestamp: Optional[int]
+        timestamp when context was purged last time
     Returns
     -------
 
@@ -129,10 +131,12 @@ def get_last_messages(user_id: int,
     massage_length = 0 if system_prompt is None else num_tokens_from_string(
         system_prompt)
 
-    for index, message in enumerate(all_messages_list_sorted):
+    for message in all_messages_list_sorted:
         this_message_length = num_tokens_from_string(message['content'])
         massage_length += this_message_length
-        if massage_length + this_message_length > tokens:
+        too_long_context = massage_length + this_message_length > tokens
+        too_long_ago = message['timestamp'] < start_from_timestamp
+        if too_long_context or too_long_ago:
             if system_prompt is not None:
                 filtered_messages.append(
                     {'role': 'system', 'content': system_prompt}
