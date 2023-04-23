@@ -144,7 +144,7 @@ async def set_system_prompt(update: Update,
     """return user_info"""
     user = update.effective_user
     mongo_user = check_user(user=user, return_mongo_user=True)
-    mongo_user.update(current_context=update.message.text)
+    mongo_user.update(system_prompt=update.message.text)
     await update.message.reply_text(
         text=f"System prompt {update.message.text} is set"
     )

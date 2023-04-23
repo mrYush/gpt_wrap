@@ -128,6 +128,8 @@ def get_last_messages(user_id: int,
     all_messages_list_sorted = sorted(all_messages_list,
                                       key=lambda d: d['timestamp'],
                                       reverse=True)
+    if start_from_timestamp is None:
+        start_from_timestamp = all_messages_list_sorted[-1]['timestamp']
     filtered_messages = list()
     massage_length = 0 if system_prompt is None else num_tokens_from_string(
         system_prompt)
