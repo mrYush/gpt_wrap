@@ -123,15 +123,14 @@ def get_last_n_message_tokens(user_id: int,
         filtered_messages.append({'role': 'system', 'content': system_prompt})
         massage_length += num_tokens_from_string(system_prompt)
 
-    if len(all_messages_list_sorted) > 0:
-        all_messages_list_sorted.reverse()
-        for index, m in enumerate(all_messages_list_sorted):
-            this_message_length = num_tokens_from_string(m['content'])
-            if massage_length + this_message_length <= tokens:
-                filtered_messages.insert(0, parse_messages(m))
-                massage_length += this_message_length
-            else:
-                break
+    all_messages_list_sorted.reverse()
+    for index, m in enumerate(all_messages_list_sorted):
+        this_message_length = num_tokens_from_string(m['content'])
+        if massage_length + this_message_length <= tokens:
+            filtered_messages.insert(0, parse_messages(m))
+            massage_length += this_message_length
+        else:
+            break
 
     if len(filtered_messages) == 0:
         filtered_messages.append({'role': 'system', 'content': 'no context'})
