@@ -126,24 +126,23 @@ def get_last_messages(user_id: int,
                                       key=lambda d: d['timestamp'],
                                       reverse=True)
     filtered_messages = list()
-    massage_length = 0
-
-    # make system prompt available as first message
-    if system_prompt is not None:
-        filtered_messages.append({'role': 'system', 'content': system_prompt})
-        massage_length += num_tokens_from_string(system_prompt)
+    massage_length = 0 if system_prompt is None else num_tokens_from_string(
+        system_prompt)
 
     for index, message in enumerate(all_messages_list_sorted):
         this_message_length = num_tokens_from_string(message['content'])
-        if massage_length + this_message_length <= tokens:
-            filtered_messages.insert(
-                0, get_several_keys(item=message, keys=['role', 'content'])
-            )
-            massage_length += this_message_length
-        else:
+        massage_length += this_message_length
+        if massage_length + this_message_length > tokens:
+            if system_prompt is not None:
+                filtered_messages.append(
+                    {'role': 'system', 'content': system_prompt}
+                )
             break
+        filtered_messages.append(
+            get_several_keys(item=message, keys=['role', 'content'])
+        )
 
     if len(filtered_messages) == 0:
         filtered_messages.append({'role': 'system', 'content': 'no context'})
-
+    filtered_messages.reverse()
     return filtered_messages
