@@ -11,7 +11,7 @@ from scrip_utils import get_logger, get_kwargs
 from settings import TELEGRAM_TOKEN
 from telegram_utils import start, help_command, gpt_answer, make_picture, \
     choose_context, button, get_user_info, show_context, SHOW_CONTEXT, \
-    PIC_COMMAND, CONTEXT
+    PIC_COMMAND, CONTEXT, set_system_prompt
 
 
 def main() -> None:
@@ -40,7 +40,9 @@ def main() -> None:
     application.add_handler(
         CommandHandler("usr", get_user_info)
     )
-    # Run the bot until the user presses Ctrl-C
+    application.add_handler(
+        CommandHandler("set_system_prompt", set_system_prompt)
+    )
     application.run_polling()
 
 
