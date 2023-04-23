@@ -18,7 +18,6 @@ connect(alias='context', db='my_database', host=MONGO_HOST)
 
 
 class SystemContext(Document):
-    context_id = IntField(required=True)
     context_alias = StringField()
     context = StringField()
     meta = {'db_alias': 'context'}
