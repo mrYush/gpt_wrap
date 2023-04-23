@@ -48,6 +48,7 @@ async def gpt_answer(update: Update,
     user = update.effective_user
     mongo_user = check_user(user=user, return_mongo_user=True)
     current_context = mongo_user.current_context
+    system_prompt = mongo_user.system_prompt
     request = update.message.text
     ConversationCollection(
         telegram_id=user.id,
@@ -61,7 +62,8 @@ async def gpt_answer(update: Update,
     else:
         # kwargs = {'messages': get_last_n_message(user_id=user.id, count=10)}
         kwargs = {
-            'messages': get_last_messages(user_id=user.id, system_prompt=None)
+            'messages': get_last_messages(user_id=user.id,
+                                          system_prompt=system_prompt)
         }
     try:
         response = get_answer(**kwargs)
@@ -101,17 +103,22 @@ async def show_context(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     context_all = get_last_messages(user_id=user.id)
     if len(context_all) > 0:
-        rows = ['{}: {}'.format(row['role'], row['content']) for row in context_all]
+        rows = ['{}: {}'.format(row['role'], row['content']) for row in
+                context_all]
     else:
         rows = ['There is no context for now']
     [await update.message.reply_text(row) for row in rows]
 
 
 async def choose_context(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    wo_context = InlineKeyboardButton(text='без контекста', callback_data="context_0")
-    last_10 = InlineKeyboardButton(text='последние N сообщений', callback_data="context_10")
-    purge = InlineKeyboardButton(text='сбросить контекст', callback_data="context_purge")
-    urlkb = InlineKeyboardMarkup(inline_keyboard=[[wo_context], [last_10], [purge]])
+    wo_context = InlineKeyboardButton(text='без контекста',
+                                      callback_data="context_0")
+    last_10 = InlineKeyboardButton(text='Максимально возможный',
+                                   callback_data="context_10")
+    purge = InlineKeyboardButton(text='сбросить контекст',
+                                 callback_data="context_purge")
+    urlkb = InlineKeyboardMarkup(
+        inline_keyboard=[[wo_context], [last_10], [purge]])
     await update.message.reply_text("вот", reply_markup=urlkb)
 
 
@@ -119,14 +126,13 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Parses the CallbackQuery and updates the message text."""
     query = update.callback_query
     user = update.effective_user
-    # CallbackQueries need to be answered, even if no notification to the user is needed
-    # Some clients may have trouble otherwise. See https://core.telegram.org/bots/api#callbackquery
     mes = f"Selected option: {query.data}"
     set_current_context(user=user, context_name=query.data)
     await query.answer(text=mes)
 
 
-async def get_user_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def get_user_info(update: Update,
+                        context: ContextTypes.DEFAULT_TYPE) -> None:
     """return user_info"""
     user = update.effective_user
     # print(user.id, user.full_name)
