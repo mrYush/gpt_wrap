@@ -14,6 +14,7 @@ from gpt_utils import get_answer, get_gen_pic_url
 LOGGER = logging.getLogger()
 PIC_COMMAND = "pic"
 SHOW_CONTEXT = 'show_context'
+CONTEXT = 'context'
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
