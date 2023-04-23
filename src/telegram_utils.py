@@ -77,6 +77,7 @@ async def gpt_answer(update: Update,
             "Для этого отправьте в чат /context и "
             "со всей силы нажмите на кнопку 'сбросить контекст'\n"
             "С момента этого нажатия контекст будет формироваться заново.")
+
     await update.message.reply_text(response)
 
 

@@ -114,12 +114,7 @@ def get_last_n_message_tokens(user_id: int,
     all_messages_list = [{'role': msg.role, 'content': msg.content, 'timestamp': msg.timestamp}
                          for msg in all_messages]
 
-    if len(all_messages_list) == 0:
-        return list()
-
     all_messages_list_sorted = sorted(all_messages_list, key=lambda d: d['timestamp'])
-    messages_copy = deepcopy(all_messages_list_sorted)
-
     filtered_messages = list()
     massage_length = 0
 
@@ -128,21 +123,18 @@ def get_last_n_message_tokens(user_id: int,
         filtered_messages.append({'role': 'system', 'content': system_prompt})
         massage_length += num_tokens_from_string(system_prompt)
 
-    # make last user message available as last message
-    last_message = messages_copy[-1]['content']
-    massage_length += num_tokens_from_string(last_message)
-    filtered_messages.append(parse_messages(messages_copy[-1]))
-    messages_copy.pop(-1)
-
-    if len(messages_copy) != 0:
-        messages_copy.reverse()
-        for index, m in enumerate(messages_copy):
+    if len(all_messages_list_sorted) > 0:
+        all_messages_list_sorted.reverse()
+        for index, m in enumerate(all_messages_list_sorted):
             this_message_length = num_tokens_from_string(m['content'])
             if massage_length + this_message_length <= tokens:
                 filtered_messages.insert(0, parse_messages(m))
                 massage_length += this_message_length
             else:
                 break
+
+    if len(filtered_messages) == 0:
+        filtered_messages.append({'role': 'system', 'content': 'no context'})
 
     return filtered_messages
 
