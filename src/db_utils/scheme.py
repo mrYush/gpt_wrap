@@ -136,18 +136,3 @@ def get_last_n_message_tokens(user_id: int,
         filtered_messages.append({'role': 'system', 'content': 'no context'})
 
     return filtered_messages
-
-
-def get_last_n_message(user_id: int, count: int):
-    all_messages = ConversationCollection.objects(telegram_id=user_id)
-    conversation = pd.DataFrame.from_dict([
-        {'role': msg.role, 'content': msg.content, 'timestamp': msg.timestamp}
-        for msg in all_messages
-    ]).sort_values('timestamp', ascending=True).tail(count * 2)
-    users = possible_users = UsersCollection.objects(telegram_id=user_id)
-    if len(users) == 1:
-        user = users[0]
-    else:
-        raise KeyError(f"wrong userd. Please check user_id {user_id}")
-    conversation = conversation[conversation['timestamp'] > user.start_context_timestamp]
-    return conversation[['role', 'content']].to_dict(orient='records')
