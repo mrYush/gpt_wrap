@@ -31,6 +31,7 @@ class UsersCollection(Document):
     is_bot = BooleanField()
     current_context = IntField()
     start_context_timestamp = FloatField()
+    system_prompt = StringField()
     meta = {'db_alias': 'users'}
 
 
