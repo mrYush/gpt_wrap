@@ -1,27 +1,17 @@
-#!/usr/bin/env python
-# pylint: disable=unused-argument, wrong-import-position
-# This program is dedicated to the public domain under the CC0 license.
-
 """
-Simple Bot to reply to Telegram messages.
-
-First, a few handler functions are defined. Then, those functions are passed to
-the Application and registered at their respective places.
-Then, the bot is started and runs until we press Ctrl-C on the command line.
-
-Usage:
-Basic Echobot example, repeats messages.
-Press Ctrl-C on the command line or send a signal to the process to stop the
-bot.
+This module contains the main function to run the bot.
 """
 from pathlib import Path
 
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler
+from telegram.ext import Application, CommandHandler, MessageHandler,\
+    filters, CallbackQueryHandler
 
+from db_utils.db_initiate import init_db
 from scrip_utils import get_logger, get_kwargs
 from settings import TELEGRAM_TOKEN
-from telegram_utils import start, help_command, gpt_answer, make_picture, choose_context, button, get_user_info, \
-    show_context, SHOW_CONTEXT, PIC_COMMAND, CONTEXT
+from telegram_utils import start, help_command, gpt_answer, make_picture, \
+    choose_context, button, get_user_info, show_context, SHOW_CONTEXT, \
+    PIC_COMMAND, CONTEXT, set_system_prompt
 
 
 def main() -> None:
@@ -50,7 +40,9 @@ def main() -> None:
     application.add_handler(
         CommandHandler("usr", get_user_info)
     )
-    # Run the bot until the user presses Ctrl-C
+    application.add_handler(
+        CommandHandler("set_system_prompt", set_system_prompt)
+    )
     application.run_polling()
 
 
@@ -61,4 +53,5 @@ if __name__ == "__main__":
     kwargs = get_kwargs(default_config_path=default_config_path).parse_args()
     LOGGER = get_logger(logger_name=FILE_NAME.stem, path=FILE_NAME.parent,
                         level=kwargs.logger_level)
+    init_db()
     main()
