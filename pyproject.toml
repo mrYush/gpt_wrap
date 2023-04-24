@@ -18,6 +18,10 @@ pandas = "^2.0.0"
 transformers = "^4.28.1"
 openpyxl = "^3.1.2"
 tiktoken = "^0.3.3"
+beautifulsoup4 = "^4.12.2"
+nltk = "^3.8.1"
+pyarrow = "^11.0.0"
+fastparquet = "^2023.2.0"
 
 
 [build-system]
