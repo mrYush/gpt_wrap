@@ -57,12 +57,7 @@ if __name__ == '__main__':
     )
 
     ### Step 2 - import data
-
     print("Uploading data with vectors to Article schema..")
-
-    counter = 0
-
-
 
     # with client.batch as batch:
     #     for k, v in article_df.iterrows():
