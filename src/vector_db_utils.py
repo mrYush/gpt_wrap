@@ -1,8 +1,18 @@
+import numpy as np
+import pandas as pd
 import weaviate
 
+from embeddings_utils import TextToEmbedings
 from settings import OPENAI_TOKEN
 
-if __name__ == '__main__':
+
+def set_schema():
+    '''
+    function to set database schema
+    Returns
+    -------
+
+    '''
     client = weaviate.Client(
         url="http://localhost:8080",
         additional_headers={
@@ -42,40 +52,97 @@ if __name__ == '__main__':
 
     # add the Article schema
     client.schema.create_class(article_schema)
-
-    # get the schema to make sure it worked
     print(client.schema.get())
 
-    ### Step 1 - configure Weaviate Batch, which optimizes CRUD operations in bulk
-    # - starting batch size of 100
-    # - dynamically increase/decrease based on performance
-    # - add timeout retries if something goes wrong
+
+def load_embeddings_to_base(article_df: pd.DataFrame):
+    '''
+    function to write database with texts and embeddings for them
+
+    Parameters
+    ----------
+    article_df: dataframe that consists of texts and embeddings for them. Mandatory columns: file_path, text, embeddings
+
+    Returns None
+    -------
+
+    '''
+    client = weaviate.Client(
+        url="http://localhost:8080",
+        additional_headers={
+            "X-OpenAI-Api-Key": OPENAI_TOKEN
+        }
+    )
+
     client.batch.configure(
         batch_size=100,
         dynamic=True,
         timeout_retries=3,
     )
 
-    ### Step 2 - import data
-    print("Uploading data with vectors to Article schema..")
+    counter = 0
+    with client.batch as batch:
+        for k, v in article_df.iterrows():
+            # print update message every 100 objects
+            if counter % 100 == 0:
+                print(f"Import {counter} / {len(article_df)} ")
 
-    # with client.batch as batch:
-    #     for k, v in article_df.iterrows():
-    #
-    #         # print update message every 100 objects
-    #         if (counter % 100 == 0):
-    #             print(f"Import {counter} / {len(article_df)} ")
-    #
-    #         properties = {
-    #             "title": v["title"],
-    #             "content": v["text"]
-    #         }
-    #
-    #         vector = v["title_vector"]
-    #
-    #         batch.add_data_object(properties, "Article", None, vector)
-    #         counter = counter + 1
-    #
-    # print(f"Importing ({len(article_df)}) Articles complete")
+            properties = {
+                "title": v["file_path"],
+                "content": v["text"]
+            }
+
+            vector = v["embeddings"]
+
+            batch.add_data_object(properties, "Article", None, vector)
+            counter = counter + 1
+
+    print(f"Importing ({len(article_df)}) Articles complete")
+
+
+def query(input_text: str, k: int):
+    '''
+
+    Parameters
+    ----------
+    input_text: text to query
+    k: how many results will be returned
+
+    Returns
+    -------
+
+    '''
+
+    client = weaviate.Client(
+        url="http://localhost:8080",
+        additional_headers={
+            "X-OpenAI-Api-Key": OPENAI_TOKEN
+        }
+    )
+
+    tte = TextToEmbedings(max_cost_to_encode=1)
+    test_emb, _ = tte.len_safe_get_embedding(input_text)
+    input_embedding = np.array(test_emb)
+    vec = {"vector": input_embedding}
+    result = client \
+        .query.get(class_name='Article', properties='content') \
+        .with_near_vector(vec) \
+        .with_limit(k) \
+        .do()
+
+    output = []
+    closest_paragraphs = result.get('data').get('Get').get('Article')
+    for p in closest_paragraphs:
+        output.append(p.get('content'))
+
+    return output
+
+
+if __name__ == '__main__':
+    set_schema()
+    sample_file = '/system_prompts/sample_article_df.pickle'
+    article_df = pd.read_pickle(sample_file)
+    load_embeddings_to_base(article_df)
+
 
 
