@@ -140,7 +140,7 @@ def query(input_text: str, k: int):
 
 if __name__ == '__main__':
     set_schema()
-    sample_file = '/system_prompts/sample_article_df.pickle'
+    sample_file = 'please insert path here'
     article_df = pd.read_pickle(sample_file)
     load_embeddings_to_base(article_df)
 
