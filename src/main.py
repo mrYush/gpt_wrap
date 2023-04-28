@@ -9,7 +9,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler,\
 from db_utils.db_initiate import init_db
 from scrip_utils import get_logger, get_kwargs
 from settings import TELEGRAM_TOKEN
-from telegram_utils import start, help_command, gpt_answer, make_picture, \
+from telegram_utils import start, help_command, response, make_picture, \
     choose_context, button, get_user_info, show_context, SHOW_CONTEXT, \
     PIC_COMMAND, CONTEXT, set_system_prompt
 
@@ -25,7 +25,7 @@ def main() -> None:
 
     # on non command i.e message - echo the message on Telegram
     application.add_handler(
-        MessageHandler(filters.TEXT & ~filters.COMMAND, gpt_answer)
+        MessageHandler(filters.TEXT & ~filters.COMMAND, response)
     )
     application.add_handler(
         CommandHandler(PIC_COMMAND, make_picture)

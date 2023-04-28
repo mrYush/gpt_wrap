@@ -42,7 +42,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     await update.message.reply_text(msg)
 
 
-async def gpt_answer(update: Update,
+async def response(update: Update,
                      context: ContextTypes.DEFAULT_TYPE) -> None:
     """Echo the user message."""
     user = update.effective_user
