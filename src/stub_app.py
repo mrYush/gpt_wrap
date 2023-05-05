@@ -13,7 +13,7 @@ async def start_stub(update, context):
     now = datetime.now()
     cur_dt = now.strftime("%d-%m-%Y %H:%M:%S")
     with open('stub.txt', 'a') as file:
-        file.write(f"{cur_dt} {update.message.user.id}\n")
+        file.write(f"{cur_dt} {update.effective_user.id}\n")
     await update.message.reply_text(
         f"Я переехал в нового бота @{new_bot}.\n"
         f"Пиши туда и я с радостью отвечу тебе!"
