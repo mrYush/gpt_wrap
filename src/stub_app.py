@@ -1,4 +1,5 @@
 """Module for temporary stub when moving from one bot to another"""
+from datetime import datetime
 from pathlib import Path
 
 from telegram.ext import Application, MessageHandler
@@ -9,6 +10,10 @@ from settings import TELEGRAM_TOKEN
 
 async def start_stub(update, context):
     """Stub for start command"""
+    now = datetime.now()
+    cur_dt = now.strftime("%d-%m-%Y %H:%M:%S")
+    with open('stub.txt', 'a') as file:
+        file.write(f"{cur_dt} {update.message.user.id}\n")
     await update.message.reply_text(
         f"Я переехал в нового бота @{new_bot}.\n"
         f"Пиши туда и я с радостью отвечу тебе!"
