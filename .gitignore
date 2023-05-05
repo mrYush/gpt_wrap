@@ -55,5 +55,5 @@ Thumbs.db
 # tmp_files
 *.ipynb_checkpoints/
 jupyter_nb/
-
+stub.txt
 db_files/
