@@ -16,7 +16,7 @@ async def start_stub(update, context):
         file.write(f"{cur_dt} {update.effective_user.id}\n")
     await update.message.reply_text(
         f"Я переехал в нового бота @{new_bot}.\n"
-        f"Пиши туда и я с радостью отвечу тебе!"
+        f"Пиши туда и я с радостью отвечу!"
     )
 
 
