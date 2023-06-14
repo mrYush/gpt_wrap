@@ -18,6 +18,8 @@ OPENAI_TOKEN = os.environ.get('OPENAI_TOKEN',
                               default=config.get('OPENAI_TOKEN'))
 MONGO_HOST = os.environ.get('MONGO_HOST',
                             default=config.get('MONGO_HOST', 'localhost'))
+WEAVIATE_HOST = os.environ.get('WEAVIATE_HOST',
+                            default=config.get('WEAVIATE_HOST', 'localhost'))
 MAX_TOKENS_CONTEXT_HISTORY = os.environ.get(
     'MAX_TOKENS_CONTEXT_HISTORY',
     default=config.get('MAX_TOKENS_CONTEXT_HISTORY', 1800)

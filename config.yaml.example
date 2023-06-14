@@ -4,5 +4,6 @@ MAX_TOKENS: 3000
 TELEGRAM_TOKEN: "put here your telegram token"
 OPENAI_TOKEN: "put here your openai token"
 MONGO_HOST: 'mongo_db'
+WEAVIATE_HOST: 'localhost'
 MAX_TOKENS_CONTEXT_HISTORY: 2800
 MAX_TOKENS_CONTEXT_OUTPUT: 1000
