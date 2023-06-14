@@ -11,6 +11,7 @@ services:
     build: .
     depends_on:
       - mongo_db
+      - weaviate
     env_file:
       - .env.development
 
@@ -27,7 +28,7 @@ services:
       - 8080:8080
     restart: on-failure:0
     environment:
-      OPENAI_APIKEY: $OPENAI_APIKEY
+      OPENAI_APIKEY: $OPENAI_TOKEN
       QUERY_DEFAULTS_LIMIT: 25
       AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
       PERSISTENCE_DATA_PATH: '/var/lib/weaviate'

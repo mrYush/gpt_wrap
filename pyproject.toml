@@ -25,6 +25,9 @@ plotly = "^5.14.1"
 scipy = "^1.10.1"
 sklearn = "^0.0.post4"
 scikit-learn = "^1.2.2"
+pdfminer = "^20191125"
+pyarrow = "^11.0.0"
+fastparquet = "^2023.4.0"
 
 
 [build-system]
