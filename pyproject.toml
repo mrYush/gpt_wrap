@@ -18,6 +18,8 @@ pandas = "^2.0.0"
 transformers = "^4.28.1"
 openpyxl = "^3.1.2"
 tiktoken = "^0.3.3"
+weaviate-client = "^3.19.2"
+matplotlib = "^3.7.1"
 
 
 [build-system]
