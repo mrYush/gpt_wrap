@@ -3,7 +3,7 @@ services:
   mongo_db:
     image: mongo
     ports:
-      - "27017:27017"
+      - "27028:27017"
     volumes:
       - ./db_files:/data/db
 
