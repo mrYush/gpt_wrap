@@ -57,3 +57,5 @@ Thumbs.db
 jupyter_nb/
 
 db_files/
+.env.example
+.env
