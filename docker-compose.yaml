@@ -1,15 +1,15 @@
 version: '3'
 services:
-  mongo_db:
+  mongo_tow:
     image: mongo
     ports:
       - "27028:27017"
     volumes:
       - ./db_files:/data/db
 
-  gpt_wrapper:
+  tow:
     build: .
     depends_on:
-      - mongo_db
+      - mongo_tow
     env_file:
       - .env.development
