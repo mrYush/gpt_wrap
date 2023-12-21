@@ -2,7 +2,7 @@
 import os
 from pathlib import Path
 
-AI_CONFIG_NAME = 'config.yaml'
+
 PROJECT_PATH = Path(__file__).parent.parent
 
 MODEL_NAME = os.environ['MODEL_NAME']
