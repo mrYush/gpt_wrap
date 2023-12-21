@@ -53,9 +53,14 @@ def check_user(user: User, return_mongo_user: bool = False):
     elif len(possible_users) == 0:
         msg = f"User {user.id}, {user.full_name} wasn't exist. Creating..."
         LOGGER.warning(msg)
-        UsersCollection(telegram_id=user.id, first_name=user.first_name,
-                        last_name=user.last_name, username=user.username,
-                        is_bot=user.is_bot).save()
+        new_user = UsersCollection(telegram_id=user.id,
+                                   first_name=user.first_name,
+                                   last_name=user.last_name,
+                                   username=user.username,
+                                   is_bot=user.is_bot)
+        new_user.save()
+        if return_mongo_user:
+            return new_user
     elif len(possible_users) > 1:
         msg = f"There are several users: {user.id}, {user.full_name}"
         LOGGER.warning(msg)
