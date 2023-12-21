@@ -3,19 +3,17 @@ import logging
 import re
 from datetime import datetime
 
-from openai import InvalidRequestError
 from telegram import Update, ForceReply, InlineKeyboardMarkup, \
     InlineKeyboardButton
 from telegram.ext import ContextTypes
 
-from db_utils.scheme import set_current_context, \
-    ConversationCollection, get_last_messages, check_user
+from db_utils.scheme import set_current_context, ConversationCollection, \
+    get_last_messages, check_user
 from gpt_utils import get_answer, get_gen_pic_url
 
 LOGGER = logging.getLogger()
 PIC_COMMAND = "pic"
 SHOW_CONTEXT = 'show_context'
-CONTEXT = 'context'
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -47,7 +45,7 @@ async def gpt_answer(update: Update,
     """Echo the user message."""
     user = update.effective_user
     mongo_user = check_user(user=user, return_mongo_user=True)
-    current_context = mongo_user.current_context
+    # current_context = mongo_user.current_context
     system_prompt = mongo_user.system_prompt
     request = update.message.text
     ConversationCollection(
@@ -57,14 +55,9 @@ async def gpt_answer(update: Update,
         content=request,
         timestamp=datetime.now().timestamp()
     ).save()
-    if current_context is None:
-        kwargs = {'prompt': request}
-    else:
-        # kwargs = {'messages': get_last_n_message(user_id=user.id, count=10)}
-        kwargs = {
-            'messages': get_last_messages(user_id=user.id,
-                                          system_prompt=system_prompt)
-        }
+    kwargs = {'messages': get_last_messages(
+        user_id=user.id, system_prompt=system_prompt
+    )}
     try:
         response = get_answer(**kwargs)
         ConversationCollection(
@@ -74,8 +67,8 @@ async def gpt_answer(update: Update,
             content=response,
             timestamp=datetime.now().timestamp()
         ).save()
-    except InvalidRequestError as error:
-        print(error)
+    except Exception as error:
+        LOGGER.error(error)
         response = (
             "Я только учусь и мне сложно анализировать "
             "так много сообщений в истории нашей переписки.\n"
@@ -83,7 +76,6 @@ async def gpt_answer(update: Update,
             "Для этого отправьте в чат /context и "
             "со всей силы нажмите на кнопку 'сбросить контекст'\n"
             "С момента этого нажатия контекст будет формироваться заново.")
-
     await update.message.reply_text(response)
 
 
@@ -111,14 +103,12 @@ async def show_context(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def choose_context(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    wo_context = InlineKeyboardButton(text='без контекста',
-                                      callback_data="context_0")
     last_10 = InlineKeyboardButton(text='Максимально возможный',
                                    callback_data="context_10")
     purge = InlineKeyboardButton(text='сбросить контекст',
                                  callback_data="context_purge")
     urlkb = InlineKeyboardMarkup(
-        inline_keyboard=[[wo_context], [last_10], [purge]])
+        inline_keyboard=[[last_10], [purge]])
     await update.message.reply_text("вот", reply_markup=urlkb)
 
 
