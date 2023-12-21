@@ -99,10 +99,12 @@ def num_tokens_from_string(string: str) -> int:
     return num_tokens
 
 
-def get_last_messages(user_id: int,
-                      tokens: int = MAX_TOKENS_CONTEXT_HISTORY,
-                      system_prompt: Optional[str] = None,
-                      start_from_timestamp: Optional[int] = None):
+def get_last_messages(
+        user_id: int,
+        tokens: int = int(MAX_TOKENS_CONTEXT_HISTORY),
+        system_prompt: Optional[str] = None,
+        start_from_timestamp: Optional[int] = None
+) -> list[dict[str, str]]:
     """
     Get last messages from user's conversation history. All message will
     be less than tokens. If system_prompt exists, it will be added.
@@ -118,7 +120,12 @@ def get_last_messages(user_id: int,
         timestamp when context was purged last time
     Returns
     -------
-
+    list of messages
+    Examples:
+    >>> get_last_messages(user_id=123456789, tokens=1000,
+    >>>                   system_prompt='system prompt')
+    [{'role': 'system', 'content': 'system prompt'},
+     {'role': 'user', 'content': 'user message'}]
     """
     all_messages = ConversationCollection.objects(telegram_id=user_id)
     all_messages_list = [{'role': msg.role, 'content': msg.content,
@@ -137,7 +144,7 @@ def get_last_messages(user_id: int,
     for message in all_messages_list_sorted:
         this_message_length = num_tokens_from_string(message['content'])
         massage_length += this_message_length
-        too_long_context = massage_length + this_message_length > tokens
+        too_long_context = (massage_length + this_message_length) > tokens
         too_long_ago = message['timestamp'] < start_from_timestamp
         if too_long_context or too_long_ago:
             if system_prompt is not None:

@@ -13,17 +13,30 @@ client = OpenAI(
 
 
 def get_answer(messages: Optional[Dict[str, str]] = None) -> str:
+    """
+    Get answer from OpenAI API.
+    Parameters
+    ----------
+    messages:
+        messages for OpenAI API
+        Examples:
+        >>> messages = {
+        >>>     "prompt": "This is a test",
+        >>>     "max_tokens": 5,
+        >>>     "temperature": 1,
+
+    Returns
+    -------
+
+    """
     ai_kwargs = {
         'model': MODEL_NAME,
         'messages': messages,
-        'temperature': TEMPERATURE,
-        'max_tokens': MAX_TOKENS_CONTEXT_OUTPUT
+        'temperature': int(TEMPERATURE),
+        'max_tokens': int(MAX_TOKENS_CONTEXT_OUTPUT)
     }
-    api_resp = openai.ChatCompletion.create(
-        **ai_kwargs
-    )
-    response = api_resp['choices'][0]['message']['content']
-    return response
+    completion = client.chat.completions.create(**ai_kwargs)
+    return completion.choices[0].message.content
 
 
 def get_gen_pic_url(text_description: str) -> str:
@@ -34,4 +47,4 @@ def get_gen_pic_url(text_description: str) -> str:
         quality="standard",
         n=1,
     )
-    return response["data"][0]['url']
+    return response.data[0].url
