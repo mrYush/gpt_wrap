@@ -76,7 +76,10 @@ async def gpt_answer(update: Update,
             content=request,
             timestamp=datetime.now().timestamp()
         ).save()
-        start_from_timestamp = max(0, mongo_user.start_context_timestamp)
+        if mongo_user.start_context_timestamp is None:
+            start_from_timestamp = 0
+        else:
+            start_from_timestamp = mongo_user.start_context_timestamp
         kwargs = {'messages': get_last_messages(
             user_id=user.id,
             system_prompt=system_prompt,
