@@ -8,12 +8,14 @@ from telegram import Update, ForceReply, InlineKeyboardMarkup, \
 from telegram.ext import ContextTypes
 
 from db_utils.scheme import set_current_context, ConversationCollection, \
-    get_last_messages, check_user
+    get_last_messages, check_user, PictureCollection
 from gpt_utils import get_answer, get_gen_pic_url
+from settings import TELEGRAM_ID_FOR_CONNECTION
 
 LOGGER = logging.getLogger()
 PIC_COMMAND = "pic"
 SHOW_CONTEXT = 'show_context'
+CONTEXT = 'context'
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -45,49 +47,92 @@ async def gpt_answer(update: Update,
     """Echo the user message."""
     user = update.effective_user
     mongo_user = check_user(user=user, return_mongo_user=True)
-    # current_context = mongo_user.current_context
-    system_prompt = mongo_user.system_prompt
-    request = update.message.text
-    ConversationCollection(
+    limit_msg = mongo_user.limit_msg
+    if limit_msg is None:
+        limit_msg = 200
+    today_generated_count = ConversationCollection.objects(
         telegram_id=user.id,
-        context_id=mongo_user.current_context,
-        role='user',
-        content=request,
-        timestamp=datetime.now().timestamp()
-    ).save()
-    kwargs = {'messages': get_last_messages(
-        user_id=user.id, system_prompt=system_prompt
-    )}
-    try:
-        response = get_answer(**kwargs)
+        timestamp__gte=datetime.now().timestamp() - 24 * 60 * 60
+    ).count()
+    if today_generated_count >= limit_msg:
+        text = (f"Sorry, but you have reached your limit of {limit_msg} "
+                f"messages per day. "
+                f"Please, connect to {TELEGRAM_ID_FOR_CONNECTION} "
+                f"for increasing your limit.")
+        await update.message.reply_text(
+            text=text,
+        )
+        return
+    else:
+        # current_context = mongo_user.current_context
+        system_prompt = mongo_user.system_prompt
+        request = update.message.text
         ConversationCollection(
             telegram_id=user.id,
             context_id=mongo_user.current_context,
-            role='assistant',
-            content=response,
+            role='user',
+            content=request,
             timestamp=datetime.now().timestamp()
         ).save()
-    except Exception as error:
-        LOGGER.error(error)
-        response = (
-            "Я только учусь и мне сложно анализировать "
-            "так много сообщений в истории нашей переписки.\n"
-            "Предлагаю сбросить контекст, и начать заново\n"
-            "Для этого отправьте в чат /context и "
-            "со всей силы нажмите на кнопку 'сбросить контекст'\n"
-            "С момента этого нажатия контекст будет формироваться заново.")
-    await update.message.reply_text(response)
+        start_from_timestamp = max(0, mongo_user.start_context_timestamp)
+        kwargs = {'messages': get_last_messages(
+            user_id=user.id,
+            system_prompt=system_prompt,
+            start_from_timestamp=start_from_timestamp
+        )}
+        try:
+            response = get_answer(**kwargs)
+            ConversationCollection(
+                telegram_id=user.id,
+                context_id=mongo_user.current_context,
+                role='assistant',
+                content=response,
+                timestamp=datetime.now().timestamp()
+            ).save()
+        except Exception as error:
+            LOGGER.error(error)
+            response = (
+                "Я только учусь и мне сложно анализировать "
+                "так много сообщений в истории нашей переписки.\n"
+                "Предлагаю сбросить контекст, и начать заново\n"
+                "Для этого отправьте в чат /context и "
+                "со всей силы нажмите на кнопку 'сбросить контекст'\n"
+                "С момента этого нажатия контекст будет формироваться заново.")
+        await update.message.reply_text(response)
 
 
 async def make_picture(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Sends the image generated on request"""
     user = update.effective_user
-    LOGGER.info(f"new_request: {user.id}; {user.mention_html()}; {update.message.text}")
-    text_description = re.sub(f"/{PIC_COMMAND}", "", update.message.text)
-    pic_url = get_gen_pic_url(text_description=text_description)
-    print(pic_url)
-    chat_id = update.effective_chat.id
-    await context.bot.send_photo(chat_id=chat_id, photo=pic_url)
+    mongo_user = check_user(user=user, return_mongo_user=True)
+    limit_pic = mongo_user.limit_pic
+    if limit_pic is None:
+        limit_pic = 100
+    today_generated_count = PictureCollection.objects(
+        telegram_id=user.id,
+        timestamp__gte=datetime.now().timestamp() - 24 * 60 * 60
+    ).count()
+    if today_generated_count >= limit_pic:
+        text = (f"Sorry, but you have reached your limit of {limit_pic} "
+                f"pictures per day. "
+                f"Please, connect to {TELEGRAM_ID_FOR_CONNECTION} "
+                f"for increasing your limit.")
+        await update.message.reply_text(
+            text=text,
+        )
+        return
+    else:
+        LOGGER.info(
+            f"new_request: {user.id}; {user.mention_html()}; {update.message.text}")
+        text_description = re.sub(f"/{PIC_COMMAND}", "", update.message.text)
+        pic_url = get_gen_pic_url(text_description=text_description)
+        print(pic_url)
+        chat_id = update.effective_chat.id
+        await context.bot.send_photo(chat_id=chat_id, photo=pic_url)
+        PictureCollection(
+            telegram_id=user.id,
+            timestamp=datetime.now().timestamp()
+        ).save()
 
 
 async def show_context(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -103,12 +148,9 @@ async def show_context(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def choose_context(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    last_10 = InlineKeyboardButton(text='Максимально возможный',
-                                   callback_data="context_10")
     purge = InlineKeyboardButton(text='сбросить контекст',
                                  callback_data="context_purge")
-    urlkb = InlineKeyboardMarkup(
-        inline_keyboard=[[last_10], [purge]])
+    urlkb = InlineKeyboardMarkup(inline_keyboard=[[purge]])
     await update.message.reply_text("вот", reply_markup=urlkb)
 
 

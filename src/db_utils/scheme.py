@@ -32,6 +32,8 @@ class UsersCollection(Document):
     current_context = IntField()
     start_context_timestamp = FloatField()
     system_prompt = StringField()
+    limit_msg = IntField()
+    limit_pic = IntField()
     meta = {'db_alias': 'users'}
 
 
@@ -40,6 +42,14 @@ class ConversationCollection(Document):
     context_id = IntField()
     role = StringField()
     content = StringField()
+    timestamp = FloatField()
+    meta = {'db_alias': 'requests'}
+
+
+class PictureCollection(Document):
+    telegram_id = IntField(required=True)
+    prompt = StringField()
+    url = StringField()
     timestamp = FloatField()
     meta = {'db_alias': 'requests'}
 
@@ -53,11 +63,17 @@ def check_user(user: User, return_mongo_user: bool = False):
     elif len(possible_users) == 0:
         msg = f"User {user.id}, {user.full_name} wasn't exist. Creating..."
         LOGGER.warning(msg)
-        new_user = UsersCollection(telegram_id=user.id,
-                                   first_name=user.first_name,
-                                   last_name=user.last_name,
-                                   username=user.username,
-                                   is_bot=user.is_bot)
+        cur_timestamp = datetime.now().timestamp()
+        new_user = UsersCollection(
+            telegram_id=user.id,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            username=user.username,
+            start_context_timestamp=cur_timestamp,
+            is_bot=user.is_bot,
+            limit_msg=30,
+            limit_pic=10
+        )
         new_user.save()
         if return_mongo_user:
             return new_user
