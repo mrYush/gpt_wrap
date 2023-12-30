@@ -134,7 +134,9 @@ async def make_picture(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_photo(chat_id=chat_id, photo=pic_url)
         PictureCollection(
             telegram_id=user.id,
-            timestamp=datetime.now().timestamp()
+            timestamp=datetime.now().timestamp(),
+            prompt=text_description,
+            url=strpic_url
         ).save()
 
 
