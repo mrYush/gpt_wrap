@@ -43,6 +43,7 @@ class ConversationCollection(Document):
     role = StringField()
     content = StringField()
     timestamp = FloatField()
+    reaction = StringField()
     meta = {'db_alias': 'requests'}
 
 
@@ -51,6 +52,7 @@ class PictureCollection(Document):
     prompt = StringField()
     url = StringField()
     timestamp = FloatField()
+    reaction = StringField()
     meta = {'db_alias': 'requests'}
 
 

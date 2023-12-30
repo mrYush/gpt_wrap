@@ -136,7 +136,7 @@ async def make_picture(update: Update, context: ContextTypes.DEFAULT_TYPE):
             telegram_id=user.id,
             timestamp=datetime.now().timestamp(),
             prompt=text_description,
-            url=strpic_url
+            url=pic_url
         ).save()
 
 
