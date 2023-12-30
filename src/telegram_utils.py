@@ -50,6 +50,8 @@ async def gpt_answer(update: Update,
     limit_msg = mongo_user.limit_msg
     if limit_msg is None:
         limit_msg = 200
+        # add limit_msg to mongo_user
+        mongo_user.update(limit_msg=limit_msg)
     today_generated_count = ConversationCollection.objects(
         telegram_id=user.id,
         timestamp__gte=datetime.now().timestamp() - 24 * 60 * 60
@@ -108,6 +110,7 @@ async def make_picture(update: Update, context: ContextTypes.DEFAULT_TYPE):
     limit_pic = mongo_user.limit_pic
     if limit_pic is None:
         limit_pic = 100
+        mongo_user.update(limit_pic=limit_pic)
     today_generated_count = PictureCollection.objects(
         telegram_id=user.id,
         timestamp__gte=datetime.now().timestamp() - 24 * 60 * 60
