@@ -23,7 +23,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = update.effective_user
     check_user(user=user , return_mongo_user=False)
     await update.message.reply_html(
-        rf"Hi {user.mention_html()}!",
+        rf"Hi {user.mention_html()}! Use /help to know what I can do.",
         reply_markup=ForceReply(selective=True),
     )
 
@@ -35,9 +35,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     msg = (
         f"Hello, {user.name}!\nSend me a message and I answer you.\n"
         f"Send /pic + description and I'll create an image.\n"
-        f"Without context, I can respond rapidly (4-5 seconds).\n"
-        f"If You want to use context send me "
-        f"/context and follow the instructions."
+        f"If You want purge context send /context and press button.\n"
     )
     await update.message.reply_text(msg)
 
