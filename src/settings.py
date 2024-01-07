@@ -22,7 +22,7 @@ TELEGRAM_ID_FOR_CONNECTION = os.environ['TELEGRAM_ID_FOR_CONNECTION']
 MONGO_CREDS = {
     'db': MONGO_DATABASE,
     'host': MONGO_HOST,
-    'port': MONGO_PORT,
+    'port': int(MONGO_PORT),
     'username': MONGO_USERNAME,
     'password': MONGO_PASSWORD
 }
