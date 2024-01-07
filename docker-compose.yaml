@@ -13,3 +13,5 @@ services:
       - mongo_tow
     env_file:
       - .env.development
+    volumes:
+      - ./src:/app/src

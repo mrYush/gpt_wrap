@@ -10,8 +10,8 @@ from db_utils.db_initiate import init_db
 from scrip_utils import get_logger, get_kwargs
 from settings import TELEGRAM_TOKEN
 from telegram_utils import start, help_command, gpt_answer, make_picture, \
-    button, get_user_info, show_context, SHOW_CONTEXT, \
-    PIC_COMMAND, set_system_prompt
+    choose_context, button, get_user_info, show_context, SHOW_CONTEXT, \
+    PIC_COMMAND, CONTEXT, set_system_prompt
 
 
 def main() -> None:
@@ -29,6 +29,9 @@ def main() -> None:
     )
     application.add_handler(
         CommandHandler(PIC_COMMAND, make_picture)
+    )
+    application.add_handler(
+        CommandHandler(CONTEXT, choose_context)
     )
     application.add_handler(
         CommandHandler(SHOW_CONTEXT, show_context)
