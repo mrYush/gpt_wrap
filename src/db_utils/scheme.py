@@ -8,13 +8,13 @@ from mongoengine import Document, StringField, IntField, connect, \
 from telegram import User
 
 from db_utils.utils import get_several_keys
-from settings import MONGO_HOST, MODEL_NAME, MAX_TOKENS_CONTEXT_HISTORY
+from settings import MODEL_NAME, MAX_TOKENS_CONTEXT_HISTORY, MONGO_CREDS
 
 LOGGER = logging.getLogger()
 
-connect(alias='users', db='my_database', host=MONGO_HOST)
-connect(alias='requests', db='my_database', host=MONGO_HOST)
-connect(alias='context', db='my_database', host=MONGO_HOST)
+connect(alias='users', **MONGO_CREDS)
+connect(alias='requests', **MONGO_CREDS)
+connect(alias='context', **MONGO_CREDS)
 
 
 class SystemContext(Document):

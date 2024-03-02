@@ -32,7 +32,7 @@ def get_answer(messages: Optional[Dict[str, str]] = None) -> str:
     ai_kwargs = {
         'model': MODEL_NAME,
         'messages': messages,
-        'temperature': int(TEMPERATURE),
+        'temperature': float(TEMPERATURE),
         'max_tokens': int(MAX_TOKENS_CONTEXT_OUTPUT)
     }
     completion = client.chat.completions.create(**ai_kwargs)

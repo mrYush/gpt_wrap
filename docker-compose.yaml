@@ -6,6 +6,8 @@ services:
       - "27028:27017"
     volumes:
       - ./db_files:/data/db
+    env_file:
+      - .env.development
 
   tow:
     build: .
