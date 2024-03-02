@@ -36,6 +36,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         f"Hello, {user.name}!\nSend me a message and I answer you.\n"
         f"Send /pic + description and I'll create an image.\n"
         f"If You want purge context send /context and press button.\n"
+        f"Use /set_system_prompt <role description> to set system prompt.\n"
     )
     await update.message.reply_text(msg)
 
