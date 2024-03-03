@@ -1,8 +1,11 @@
 """Module for telegram handlers"""
+import hashlib
+import json
 import logging
 import re
 from datetime import datetime
 
+import requests
 from telegram import Update, ForceReply, InlineKeyboardMarkup, \
     InlineKeyboardButton
 from telegram.ext import ContextTypes
@@ -10,7 +13,7 @@ from telegram.ext import ContextTypes
 from db_utils.scheme import set_current_context, ConversationCollection, \
     get_last_messages, check_user, PictureCollection
 from gpt_utils import get_answer, get_gen_pic_url
-from settings import TELEGRAM_ID_FOR_CONNECTION
+from settings import TELEGRAM_ID_FOR_CONNECTION, ENCODING_URL, IMAGES_PATH
 
 LOGGER = logging.getLogger()
 PIC_COMMAND = "pic"
@@ -34,9 +37,10 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     check_user(user=user)
     msg = (
         f"Hello, {user.name}!\nSend me a message and I answer you.\n"
-        f"Send /pic + description and I'll create an image.\n"
+        f"Send /{PIC_COMMAND} <description> to get a picture.\n"
         f"If You want purge context send /context and press button.\n"
         f"Use /set_system_prompt <role description> to set system prompt.\n"
+        f"Use /usr to get user info.\n"
     )
     await update.message.reply_text(msg)
 
@@ -105,6 +109,44 @@ async def gpt_answer(update: Update,
         await update.message.reply_text(response)
 
 
+async def encode_image_on_service(
+        image_url: str,
+        text: str
+) -> str:
+    """
+    Encodes text in the image. Saves result to the file.
+    Parameters
+    ----------
+    image_url: str
+        url to the image
+    text: str
+        text to encode in the image
+
+    Returns
+    -------
+    str
+        file name in images folder
+    """
+    if ENCODING_URL is not None:
+        payload = {"image_url": image_url,
+                   "text": text}
+        response = requests.post(ENCODING_URL,
+                                 data=payload)
+        if response.status_code == 200:
+            LOGGER.debug("Image is encoded")
+            encoded_image_path = IMAGES_PATH / hashlib.sha256(
+                response.content
+            ).hexdigest()[0:10] + ".png"
+            with open(encoded_image_path, "wb") as f:
+                f.write(response.content)
+            return encoded_image_path
+        else:
+            LOGGER.error(f"Error while encoding image: {response.text}")
+            raise ValueError(f"Error while encoding image: {response.text}")
+    else:
+        raise ValueError("Encoding url is not set")
+
+
 async def make_picture(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Sends the image generated on request"""
     user = update.effective_user
@@ -131,9 +173,21 @@ async def make_picture(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"new_request: {user.id}; {user.mention_html()}; {update.message.text}")
         text_description = re.sub(f"/{PIC_COMMAND}", "", update.message.text)
         pic_url = get_gen_pic_url(text_description=text_description)
-        print(pic_url)
+        text = json.dumps({
+            "user": mongo_user.telegram_id,
+            "prompt": text_description,
+            "pic_url": pic_url,
+            "timestamp": datetime.now().timestamp()
+        })
+        encoded_img_path = await encode_image_on_service(
+            image_url=pic_url,
+            text=text
+        )
         chat_id = update.effective_chat.id
-        await context.bot.send_photo(chat_id=chat_id, photo=pic_url)
+        await context.bot.send_photo(
+            chat_id=chat_id,
+            photo=open(encoded_img_path, 'rb')
+        )
         PictureCollection(
             telegram_id=user.id,
             timestamp=datetime.now().timestamp(),

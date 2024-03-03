@@ -17,3 +17,4 @@ services:
       - .env.development
     volumes:
       - ./src:/app/src
+      - ./images:/app/images
