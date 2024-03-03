@@ -166,7 +166,7 @@ async def decode_image_on_service(
         text from the image
     """
     if DECODING_URL is not None:
-        files = {"file": open(image_path, "rb")}
+        files = {"file": ("image.png", open(image_path, "rb"))}
         response = requests.post(DECODING_URL,
                                  files=files,
                                  timeout=180)
@@ -278,15 +278,15 @@ async def set_system_prompt(update: Update,
     )
 
 
-async def handle_png(update: Update,
-                     context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_png(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle PNG files sent by the user."""
     doc = update.message.document
     tmp_path = IMAGES_PATH / "tmp" / doc.file_name
     tmp_path.parent.mkdir(exist_ok=True)
-    png_file = context.bot.get_file(doc)
+    # Await the get_file coroutine
+    png_file = await context.bot.get_file(doc)
     # Await the download coroutine
-    await png_file.download(custom_path=tmp_path)
+    await png_file.download_to_drive(custom_path=tmp_path)
     LOGGER.debug(f"Image is downloaded to {tmp_path}")
     encoded_msg = await decode_image_on_service(image_path=tmp_path)
     LOGGER.debug(f"Decoded message: {encoded_msg}")
