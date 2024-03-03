@@ -31,6 +31,8 @@ ENCODING_HOST = os.environ.get('ENCODING_HOST', default=None)
 ENCODING_PORT = os.environ.get('ENCODING_PORT', default=None)
 if ENCODING_HOST and ENCODING_PORT:
     ENCODING_URL = f"http://{ENCODING_HOST}:{ENCODING_PORT}/encode_image"
+    DECODING_URL = f"http://{ENCODING_HOST}:{ENCODING_PORT}/decode_image"
 else:
     ENCODING_URL = None
+    DECODING_URL = None
 IMAGES_PATH = PROJECT_PATH / 'images'

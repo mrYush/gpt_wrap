@@ -11,7 +11,7 @@ from scrip_utils import get_logger, get_kwargs
 from settings import TELEGRAM_TOKEN
 from telegram_utils import start, help_command, gpt_answer, make_picture, \
     choose_context, button, get_user_info, show_context, SHOW_CONTEXT, \
-    PIC_COMMAND, CONTEXT, set_system_prompt
+    PIC_COMMAND, CONTEXT, set_system_prompt, handle_png
 
 
 def main() -> None:
@@ -42,6 +42,10 @@ def main() -> None:
     )
     application.add_handler(
         CommandHandler("set_system_prompt", set_system_prompt)
+    )
+    application.add_handler(
+        MessageHandler(filters.Document.MimeType("image/png"),
+                       handle_png)
     )
     application.run_polling()
 

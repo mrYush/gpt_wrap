@@ -8,12 +8,13 @@ from datetime import datetime
 import requests
 from telegram import Update, ForceReply, InlineKeyboardMarkup, \
     InlineKeyboardButton
-from telegram.ext import ContextTypes
+from telegram.ext import ContextTypes, CallbackContext
 
 from db_utils.scheme import set_current_context, ConversationCollection, \
     get_last_messages, check_user, PictureCollection
 from gpt_utils import get_answer, get_gen_pic_url
-from settings import TELEGRAM_ID_FOR_CONNECTION, ENCODING_URL, IMAGES_PATH
+from settings import TELEGRAM_ID_FOR_CONNECTION, ENCODING_URL, IMAGES_PATH, \
+    DECODING_URL
 
 LOGGER = logging.getLogger()
 PIC_COMMAND = "pic"
@@ -149,6 +150,38 @@ async def encode_image_on_service(
         raise ValueError("Encoding url is not set")
 
 
+async def decode_image_on_service(
+        image_path: str,
+) -> str:
+    """
+    Decodes text from the image.
+    Parameters
+    ----------
+    image_path: str
+        path to the image
+
+    Returns
+    -------
+    str
+        text from the image
+    """
+    if DECODING_URL is not None:
+        files = {"file": open(image_path, "rb")}
+        response = requests.post(DECODING_URL,
+                                 files=files,
+                                 timeout=180)
+        if response.status_code == 200:
+            LOGGER.debug("Image is decoded")
+            return response.text
+        else:
+            msg = f"Error while decoding image: {response.text}"
+            LOGGER.error(msg)
+            raise ValueError(msg)
+    else:
+        msg = "Decoding url is not set"
+        LOGGER.error(msg)
+
+
 async def make_picture(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Sends the image generated on request"""
     user = update.effective_user
@@ -243,3 +276,19 @@ async def set_system_prompt(update: Update,
     await update.message.reply_text(
         text=f"System prompt {update.message.text} is set"
     )
+
+
+async def handle_png(update: Update,
+                     context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle PNG files sent by the user."""
+    doc = update.message.document
+    tmp_path = IMAGES_PATH / "tmp" / doc.file_name
+    tmp_path.parent.mkdir(exist_ok=True)
+    png_file = context.bot.get_file(doc)
+    # Await the download coroutine
+    await png_file.download(custom_path=tmp_path)
+    LOGGER.debug(f"Image is downloaded to {tmp_path}")
+    encoded_msg = await decode_image_on_service(image_path=tmp_path)
+    LOGGER.debug(f"Decoded message: {encoded_msg}")
+    await update.message.reply_text(encoded_msg)
+    tmp_path.unlink()
