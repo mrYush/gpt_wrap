@@ -8,7 +8,7 @@ from datetime import datetime
 import requests
 from telegram import Update, ForceReply, InlineKeyboardMarkup, \
     InlineKeyboardButton
-from telegram.ext import ContextTypes, CallbackContext
+from telegram.ext import ContextTypes
 
 from db_utils.scheme import set_current_context, ConversationCollection, \
     get_last_messages, check_user, PictureCollection
