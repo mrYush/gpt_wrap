@@ -186,7 +186,7 @@ async def make_picture(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text=text
         )
         chat_id = update.effective_chat.id
-        await context.bot.send_photo(
+        await context.bot.send_document(
             chat_id=chat_id,
             document=open(encoded_img_path, 'rb')
         )
