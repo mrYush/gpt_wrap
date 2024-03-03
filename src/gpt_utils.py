@@ -39,10 +39,10 @@ def get_answer(messages: Optional[Dict[str, str]] = None) -> str:
     return completion.choices[0].message.content
 
 
-def get_gen_pic_url(text_description: str) -> str:
+def get_gen_pic_url(prompt: str) -> str:
     response = client.images.generate(
         model="dall-e-3",
-        prompt=text_description,
+        prompt=prompt,
         size="1024x1024",
         quality="standard",
         n=1,

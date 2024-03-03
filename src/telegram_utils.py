@@ -7,10 +7,12 @@ from datetime import datetime
 
 import requests
 import yaml
+from requests.exceptions import ConnectionError
 from telegram import Update, ForceReply, InlineKeyboardMarkup, \
     InlineKeyboardButton
 from telegram.ext import ContextTypes
 
+from custom_exceptions import NoEncoderFound
 from db_utils.scheme import set_current_context, ConversationCollection, \
     get_last_messages, check_user, PictureCollection
 from gpt_utils import get_answer, get_gen_pic_url
@@ -148,7 +150,9 @@ async def encode_image_on_service(
             LOGGER.error(f"Error while encoding image: {response.text}")
             raise ValueError(f"Error while encoding image: {response.text}")
     else:
-        raise ValueError("Encoding url is not set")
+        msg = "Encoding url is not set"
+        LOGGER.error(msg)
+        raise NoEncoderFound(msg)
 
 
 async def decode_image_on_service(
@@ -181,6 +185,7 @@ async def decode_image_on_service(
     else:
         msg = "Decoding url is not set"
         LOGGER.error(msg)
+        raise NoEncoderFound(msg)
 
 
 async def make_picture(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -207,28 +212,47 @@ async def make_picture(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         LOGGER.info(
             f"new_request: {user.id}; {user.mention_html()}; {update.message.text}")
-        text_description = re.sub(f"/{PIC_COMMAND}", "", update.message.text)
-        pic_url = get_gen_pic_url(text_description=text_description)
+        prompt = re.sub(f"/{PIC_COMMAND}", "", update.message.text)
+        pic_url = get_gen_pic_url(prompt=prompt)
         text = json.dumps({
             "user": mongo_user.telegram_id,
-            "prompt": text_description,
+            "prompt": prompt,
             "pic_url": pic_url,
             "timestamp": datetime.now().timestamp()
         })
-        encoded_img_path = await encode_image_on_service(
-            image_url=pic_url,
-            text=text
-        )
+        try:
+            encoded_img_path = await encode_image_on_service(
+                image_url=pic_url,
+                text=text
+            )
+            caption = "Picture was marked as generated"
+        except NoEncoderFound as error:
+            encoded_img_path = None
+            caption = ("Can't mark picture as generated,"
+                       " service is not setted up")
+        except ConnectionError as error:
+            encoded_img_path = None
+            caption = ("Can't mark picture as generated,"
+                       " service is not available")
         chat_id = update.effective_chat.id
-        await context.bot.send_document(
-            chat_id=chat_id,
-            document=open(encoded_img_path, 'rb')
-        )
+        if encoded_img_path is None:
+            await context.bot.send_photo(
+                chat_id=chat_id,
+                photo=pic_url,
+                caption=caption
+            )
+        else:
+            await context.bot.send_document(
+                chat_id=chat_id,
+                document=open(encoded_img_path, 'rb'),
+                caption=caption
+            )
         PictureCollection(
             telegram_id=user.id,
+            prompt=prompt,
+            url=pic_url,
             timestamp=datetime.now().timestamp(),
-            prompt=text_description,
-            url=pic_url
+            encoded_img_path=str(encoded_img_path)
         ).save()
 
 
@@ -289,9 +313,13 @@ async def handle_png(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     # Await the download coroutine
     await png_file.download_to_drive(custom_path=tmp_path)
     LOGGER.debug(f"Image is downloaded to {tmp_path}")
-    encoded_msg = await decode_image_on_service(image_path=tmp_path)
-    intermediate = json.loads(json.loads(encoded_msg)["text"])
-    LOGGER.debug(f"Decoded message: {intermediate}")
-    response = yaml.dump(intermediate, allow_unicode=True, sort_keys=False)
+    try:
+        encoded_msg = await decode_image_on_service(image_path=tmp_path)
+        intermediate = json.loads(json.loads(encoded_msg)["text"])
+        LOGGER.debug(f"Decoded message: {intermediate}")
+        response = yaml.dump(intermediate, allow_unicode=True, sort_keys=False)
+    except ConnectionError as error:
+        LOGGER.error(error)
+        response = "Decode service is not available, can't get text from image"
     await update.message.reply_text(response)
     tmp_path.unlink()

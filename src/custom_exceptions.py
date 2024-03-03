@@ -1,0 +1,2 @@
+class NoEncoderFound(Exception):
+    pass

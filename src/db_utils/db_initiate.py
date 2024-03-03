@@ -1,12 +1,9 @@
 """This module contains the function to initialize the database"""
 import logging
 
-from db_utils.utils import get_several_keys
 from db_utils.scheme import SystemContext
+from db_utils.utils import get_several_keys
 from system_prompts.prompts import SYSTEM_PROMPTS
-from db_utils.scheme import UsersCollection, ConversationCollection, \
-    PictureCollection
-
 
 LOGGER = logging.getLogger()
 

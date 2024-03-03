@@ -53,7 +53,7 @@ class PictureCollection(Document):
     url = StringField()
     timestamp = FloatField()
     reaction = StringField()
-    filename = StringField()
+    encoded_img_path = StringField()
     meta = {'db_alias': 'requests'}
 
 
