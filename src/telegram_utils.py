@@ -134,9 +134,10 @@ async def encode_image_on_service(
                                  data=payload)
         if response.status_code == 200:
             LOGGER.debug("Image is encoded")
-            encoded_image_path = IMAGES_PATH / hashlib.sha256(
+            new_file_name = hashlib.sha256(
                 response.content
             ).hexdigest()[0:10] + ".png"
+            encoded_image_path = IMAGES_PATH / new_file_name
             with open(encoded_image_path, "wb") as f:
                 f.write(response.content)
             return encoded_image_path
