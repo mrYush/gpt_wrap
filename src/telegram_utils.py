@@ -6,6 +6,7 @@ import re
 from datetime import datetime
 
 import requests
+import yaml
 from telegram import Update, ForceReply, InlineKeyboardMarkup, \
     InlineKeyboardButton
 from telegram.ext import ContextTypes
@@ -289,6 +290,8 @@ async def handle_png(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     await png_file.download_to_drive(custom_path=tmp_path)
     LOGGER.debug(f"Image is downloaded to {tmp_path}")
     encoded_msg = await decode_image_on_service(image_path=tmp_path)
-    LOGGER.debug(f"Decoded message: {encoded_msg}")
-    await update.message.reply_text(encoded_msg)
+    intermediate = json.loads(json.loads(encoded_msg)["text"])
+    LOGGER.debug(f"Decoded message: {intermediate}")
+    response = yaml.dump(intermediate, allow_unicode=True, sort_keys=False)
+    await update.message.reply_text(response)
     tmp_path.unlink()

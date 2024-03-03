@@ -8,4 +8,4 @@ RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
 
 COPY src/ /app/src/
 
-CMD ["python", "src/main.py", "-l", "20"]
+CMD ["python", "src/main.py", "-l", "10"]
