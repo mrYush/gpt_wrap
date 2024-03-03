@@ -131,7 +131,8 @@ async def encode_image_on_service(
         payload = {"image_url": image_url,
                    "text": text}
         response = requests.post(ENCODING_URL,
-                                 data=payload)
+                                 data=payload,
+                                 timeout=180)
         if response.status_code == 200:
             LOGGER.debug("Image is encoded")
             new_file_name = hashlib.sha256(
@@ -187,7 +188,7 @@ async def make_picture(update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id = update.effective_chat.id
         await context.bot.send_photo(
             chat_id=chat_id,
-            photo=open(encoded_img_path, 'rb')
+            document=open(encoded_img_path, 'rb')
         )
         PictureCollection(
             telegram_id=user.id,
