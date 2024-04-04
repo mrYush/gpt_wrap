@@ -244,13 +244,13 @@ async def make_picture(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await context.bot.send_photo(
                 chat_id=chat_id,
                 photo=pic_url,
-                caption=caption
+                # caption=caption
             )
         else:
             await context.bot.send_photo(
                 chat_id=chat_id,
                 photo=open(encoded_img_path, 'rb'),
-                caption=caption
+                # caption=caption
             )
         PictureCollection(
             telegram_id=user.id,
