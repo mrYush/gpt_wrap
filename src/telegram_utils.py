@@ -235,18 +235,23 @@ async def make_picture(update: Update, context: ContextTypes.DEFAULT_TYPE):
             caption = ("Can't mark picture as generated,"
                        " service is not available")
         chat_id = update.effective_chat.id
-        if encoded_img_path is None:
-            await context.bot.send_photo(
-                chat_id=chat_id,
-                photo=pic_url,
-                caption=caption
-            )
-        else:
-            await context.bot.send_document(
-                chat_id=chat_id,
-                document=open(encoded_img_path, 'rb'),
-                caption=caption
-            )
+        await context.bot.send_photo(
+            chat_id=chat_id,
+            photo=pic_url,
+            caption=caption
+        )
+        # if encoded_img_path is None:
+        #     await context.bot.send_photo(
+        #         chat_id=chat_id,
+        #         photo=pic_url,
+        #         caption=caption
+        #     )
+        # else:
+        #     await context.bot.send_document(
+        #         chat_id=chat_id,
+        #         document=open(encoded_img_path, 'rb'),
+        #         caption=caption
+        #     )
         PictureCollection(
             telegram_id=user.id,
             prompt=prompt,
