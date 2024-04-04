@@ -247,7 +247,7 @@ async def make_picture(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 caption=caption
             )
         else:
-            await context.bot.send_document(
+            await context.bot.send_photo(
                 chat_id=chat_id,
                 photo=open(encoded_img_path, 'rb'),
                 caption=caption
