@@ -238,7 +238,7 @@ async def make_picture(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_photo(
             chat_id=chat_id,
             photo=pic_url,
-            caption=caption
+            # caption=caption
         )
         # if encoded_img_path is None:
         #     await context.bot.send_photo(
