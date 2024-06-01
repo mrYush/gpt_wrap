@@ -1,16 +1,23 @@
 """Module for telegram handlers"""
+import hashlib
+import json
 import logging
 import re
 from datetime import datetime
 
+import requests
+import yaml
+from requests.exceptions import ConnectionError
 from telegram import Update, ForceReply, InlineKeyboardMarkup, \
     InlineKeyboardButton
 from telegram.ext import ContextTypes
 
+from custom_exceptions import NoEncoderFound
 from db_utils.scheme import set_current_context, ConversationCollection, \
     get_last_messages, check_user, PictureCollection
 from gpt_utils import get_answer, get_gen_pic_url
-from settings import TELEGRAM_ID_FOR_CONNECTION
+from settings import TELEGRAM_ID_FOR_CONNECTION, ENCODING_URL, IMAGES_PATH, \
+    DECODING_URL
 
 LOGGER = logging.getLogger()
 PIC_COMMAND = "pic"
@@ -34,8 +41,10 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     check_user(user=user)
     msg = (
         f"Hello, {user.name}!\nSend me a message and I answer you.\n"
-        f"Send /pic + description and I'll create an image.\n"
+        f"Send /{PIC_COMMAND} <description> to get a picture.\n"
         f"If You want purge context send /context and press button.\n"
+        f"Use /set_system_prompt <role description> to set system prompt.\n"
+        f"Use /usr to get user info.\n"
     )
     await update.message.reply_text(msg)
 
@@ -104,6 +113,81 @@ async def gpt_answer(update: Update,
         await update.message.reply_text(response)
 
 
+async def encode_image_on_service(
+        image_url: str,
+        text: str
+) -> str:
+    """
+    Encodes text in the image. Saves result to the file.
+    Parameters
+    ----------
+    image_url: str
+        url to the image
+    text: str
+        text to encode in the image
+
+    Returns
+    -------
+    str
+        file name in images folder
+    """
+    if ENCODING_URL is not None:
+        payload = {"image_url": image_url,
+                   "text": text}
+        response = requests.post(ENCODING_URL,
+                                 data=payload,
+                                 timeout=180)
+        if response.status_code == 200:
+            LOGGER.debug("Image is encoded")
+            new_file_name = hashlib.sha256(
+                response.content
+            ).hexdigest()[0:10] + ".png"
+            encoded_image_path = IMAGES_PATH / new_file_name
+            with open(encoded_image_path, "wb") as f:
+                f.write(response.content)
+            return encoded_image_path
+        else:
+            LOGGER.error(f"Error while encoding image: {response.text}")
+            raise ValueError(f"Error while encoding image: {response.text}")
+    else:
+        msg = "Encoding url is not set"
+        LOGGER.error(msg)
+        raise NoEncoderFound(msg)
+
+
+async def decode_image_on_service(
+        image_path: str,
+) -> str:
+    """
+    Decodes text from the image.
+    Parameters
+    ----------
+    image_path: str
+        path to the image
+
+    Returns
+    -------
+    str
+        text from the image
+    """
+    if DECODING_URL is not None:
+        files = {"file": ("image.png", open(image_path, "rb"))}
+        response = requests.post(DECODING_URL,
+                                 files=files,
+                                 timeout=180)
+        if response.status_code == 200:
+            LOGGER.debug("Image is decoded")
+            return response.text
+        else:
+            msg = f"Error while decoding image: {response.text}"
+            LOGGER.error(msg)
+            raise ValueError(msg)
+    else:
+        msg = "Decoding url is not set"
+        LOGGER.error(msg)
+        raise NoEncoderFound(msg)
+
+
 async def make_picture(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Sends the image generated on request"""
     user = update.effective_user
@@ -128,16 +212,52 @@ async def make_picture(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         LOGGER.info(
             f"new_request: {user.id}; {user.mention_html()}; {update.message.text}")
-        text_description = re.sub(f"/{PIC_COMMAND}", "", update.message.text)
-        pic_url = get_gen_pic_url(text_description=text_description)
-        print(pic_url)
+        prompt = re.sub(f"/{PIC_COMMAND}", "", update.message.text)
+        pic_url = get_gen_pic_url(prompt=prompt)
+        text = json.dumps({
+            "user": mongo_user.telegram_id,
+            "prompt": prompt,
+            "pic_url": pic_url,
+            "timestamp": datetime.now().timestamp()
+        })
+        try:
+            encoded_img_path = await encode_image_on_service(
+                image_url=pic_url,
+                text=text
+            )
+            caption = "Picture was marked as generated"
+        except NoEncoderFound as error:
+            encoded_img_path = None
+            caption = ("Can't mark picture as generated,"
+                       " service is not setted up")
+        except ConnectionError as error:
+            encoded_img_path = None
+            caption = ("Can't mark picture as generated,"
+                       " service is not available")
         chat_id = update.effective_chat.id
-        await context.bot.send_photo(chat_id=chat_id, photo=pic_url)
+        # await context.bot.send_photo(
+        #     chat_id=chat_id,
+        #     photo=pic_url,
+        #     # caption=caption
+        # )
+        if encoded_img_path is None:
+            await context.bot.send_photo(
+                chat_id=chat_id,
+                photo=pic_url,
+                # caption=caption
+            )
+        else:
+            await context.bot.send_photo(
+                chat_id=chat_id,
+                photo=open(encoded_img_path, 'rb'),
+                # caption=caption
+            )
         PictureCollection(
             telegram_id=user.id,
+            prompt=prompt,
+            url=pic_url,
             timestamp=datetime.now().timestamp(),
-            prompt=text_description,
-            url=pic_url
+            encoded_img_path=str(encoded_img_path)
         ).save()
 
 
@@ -186,3 +306,25 @@ async def set_system_prompt(update: Update,
     await update.message.reply_text(
         text=f"System prompt {update.message.text} is set"
     )
+
+
+async def handle_png(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle PNG files sent by the user."""
+    doc = update.message.document
+    tmp_path = IMAGES_PATH / "tmp" / doc.file_name
+    tmp_path.parent.mkdir(exist_ok=True)
+    # Await the get_file coroutine
+    png_file = await context.bot.get_file(doc)
+    # Await the download coroutine
+    await png_file.download_to_drive(custom_path=tmp_path)
+    LOGGER.debug(f"Image is downloaded to {tmp_path}")
+    try:
+        encoded_msg = await decode_image_on_service(image_path=tmp_path)
+        intermediate = json.loads(json.loads(encoded_msg)["text"])
+        LOGGER.debug(f"Decoded message: {intermediate}")
+        response = yaml.dump(intermediate, allow_unicode=True, sort_keys=False)
+    except ConnectionError as error:
+        LOGGER.error(error)
+        response = "Decode service is not available, can't get text from image"
+    await update.message.reply_text(response)
+    tmp_path.unlink()

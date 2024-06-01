@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 
 
-PROJECT_PATH = Path(__file__).parent.parent
+PROJECT_PATH = Path(__file__).parents[1]
 
 MODEL_NAME = os.environ['MODEL_NAME']
 TEMPERATURE = os.environ['TEMPERATURE']
@@ -26,3 +26,13 @@ MONGO_CREDS = {
     'username': MONGO_USERNAME,
     'password': MONGO_PASSWORD
 }
+
+ENCODING_HOST = os.environ.get('ENCODING_HOST', default=None)
+ENCODING_PORT = os.environ.get('ENCODING_PORT', default=None)
+if ENCODING_HOST and ENCODING_PORT:
+    ENCODING_URL = f"http://{ENCODING_HOST}:{ENCODING_PORT}/encode_image"
+    DECODING_URL = f"http://{ENCODING_HOST}:{ENCODING_PORT}/decode_image"
+else:
+    ENCODING_URL = None
+    DECODING_URL = None
+IMAGES_PATH = PROJECT_PATH / 'images'

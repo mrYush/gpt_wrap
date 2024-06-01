@@ -59,4 +59,4 @@ jupyter_nb/
 db_files/
 .env.development
 .env
-.env.development
+images/

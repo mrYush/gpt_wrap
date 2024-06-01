@@ -53,6 +53,7 @@ class PictureCollection(Document):
     url = StringField()
     timestamp = FloatField()
     reaction = StringField()
+    encoded_img_path = StringField()
     meta = {'db_alias': 'requests'}
 
 
@@ -178,8 +179,9 @@ def get_last_messages(
         filtered_messages.append(
             get_several_keys(item=message, keys=['role', 'content'])
         )
-
+    LOGGER.info(f"Tokens in context: {massage_length}")
     if len(filtered_messages) == 0:
         filtered_messages.append({'role': 'system', 'content': 'no context'})
     filtered_messages.reverse()
+    LOGGER.info(f"Len of filtered messages: {len(filtered_messages)}")
     return filtered_messages
