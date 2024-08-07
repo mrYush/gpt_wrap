@@ -162,8 +162,7 @@ def get_last_messages(
     if start_from_timestamp is None:
         start_from_timestamp = all_messages_list_sorted[-1]['timestamp']
     filtered_messages = list()
-    massage_length = 0 if system_prompt is None else num_tokens_from_string(
-        system_prompt)
+    massage_length = 0 if system_prompt is None else len(system_prompt)
 
     for message in all_messages_list_sorted:
         this_message_length = len(message['content']) / 2
