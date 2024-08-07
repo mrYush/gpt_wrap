@@ -5,6 +5,7 @@ from pathlib import Path
 
 PROJECT_PATH = Path(__file__).parents[1]
 
+URL="https://api.openai.com/v1/chat/completions"
 MODEL_NAME = os.environ['MODEL_NAME']
 TEMPERATURE = os.environ['TEMPERATURE']
 # MAX_TOKENS = os.environ.get('MAX_TOKENS', default=config.get('MAX_TOKENS'))
