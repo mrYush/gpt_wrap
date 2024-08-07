@@ -166,7 +166,7 @@ def get_last_messages(
         system_prompt)
 
     for message in all_messages_list_sorted:
-        this_message_length = num_tokens_from_string(message['content'])
+        this_message_length = len(message['content']) / 2
         massage_length += this_message_length
         too_long_context = (massage_length + this_message_length) > tokens
         too_long_ago = message['timestamp'] < start_from_timestamp
