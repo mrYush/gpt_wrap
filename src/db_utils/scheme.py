@@ -2,13 +2,12 @@ import logging
 from datetime import datetime
 from typing import Optional
 
-import tiktoken
 from mongoengine import Document, StringField, IntField, connect, \
     BooleanField, FloatField
 from telegram import User
 
 from db_utils.utils import get_several_keys
-from settings import MODEL_NAME, MAX_TOKENS_CONTEXT_HISTORY, MONGO_CREDS
+from settings import MAX_TOKENS_CONTEXT_HISTORY, MONGO_CREDS
 
 LOGGER = logging.getLogger()
 
@@ -118,9 +117,10 @@ def set_current_context(user: User, context_name: str) -> Optional[int]:
 
 def num_tokens_from_string(string: str) -> int:
     """Returns the number of tokens in a text string."""
-    encoding = tiktoken.encoding_for_model(MODEL_NAME)
-    num_tokens = len(encoding.encode(string))
-    return num_tokens
+
+    # encoding = tiktoken.encoding_for_model(MODEL_NAME)
+    # num_tokens = len(encoding.encode(string))
+    return len(string)
 
 
 def get_last_messages(

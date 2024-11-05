@@ -5,6 +5,8 @@ from pathlib import Path
 
 from telegram.ext import Application, CommandHandler, MessageHandler, \
     filters, CallbackQueryHandler
+from telegram import ReplyKeyboardMarkup, KeyboardButton
+
 
 from db_utils.db_initiate import init_db
 from scrip_utils import get_logger, get_kwargs
